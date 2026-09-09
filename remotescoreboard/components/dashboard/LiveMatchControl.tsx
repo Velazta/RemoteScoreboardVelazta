@@ -2,17 +2,23 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import LayoutCustomization from "./LayoutCustomization";
+import { useScoreboardStore } from "@/store/useScoreboardStore";
 import gsap from "gsap";
 
 export default function LiveMatchControl() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<"live" | "layout">("live");
 
-  const [team1Name, setTeam1Name] = useState("SADNESS");
-  const [team1Score, setTeam1Score] = useState(0);
-
-  const [team2Name, setTeam2Name] = useState("NBA");
-  const [team2Score, setTeam2Score] = useState(0);
+  const {
+    team1,
+    team2,
+    setTeam1Name,
+    setTeam1Score,
+    setTeam2Name,
+    setTeam2Score,
+    swapTeams,
+    resetScores,
+  } = useScoreboardStore();
 
   useEffect(() => {
     if (containerRef.current) {
@@ -34,7 +40,7 @@ export default function LiveMatchControl() {
             activeTab === "live" ? "translate-x-0" : "translate-x-[calc(100%+8px)]"
           }`}
         />
-        
+
         <button
           onClick={() => setActiveTab("live")}
           className={`relative z-10 flex-1 py-3.5 font-montserrat font-medium text-[10px] sm:text-xs tracking-widest uppercase transition-colors rounded-[12px] ${
@@ -45,7 +51,7 @@ export default function LiveMatchControl() {
         >
           Live Match Control
         </button>
-        
+
         <button
           onClick={() => setActiveTab("layout")}
           className={`relative z-10 flex-1 py-3.5 font-montserrat font-medium text-[10px] sm:text-xs tracking-widest uppercase transition-colors rounded-[12px] ${
@@ -76,7 +82,7 @@ export default function LiveMatchControl() {
                 </label>
                 <input
                   type="text"
-                  value={team1Name}
+                  value={team1.name}
                   onChange={(e) => setTeam1Name(e.target.value)}
                   className="w-full rounded-[8px] bg-[#242424] border border-white/10 px-4 py-3.5 text-sm text-white focus:outline-none focus:border-white/30 transition-colors"
                 />
@@ -87,19 +93,19 @@ export default function LiveMatchControl() {
                 </label>
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() => setTeam1Score(Math.max(0, team1Score - 1))}
+                    onClick={() => setTeam1Score(team1.score - 1)}
                     className="flex-shrink-0 w-20 h-14 rounded-[8px] bg-[#a855f7] hover:bg-[#9333ea] flex items-center justify-center font-bold text-2xl text-white transition-colors cursor-pointer"
                   >
                     -
                   </button>
                   <input
                     type="number"
-                    value={team1Score}
+                    value={team1.score}
                     onChange={(e) => setTeam1Score(Number(e.target.value))}
                     className="flex-1 min-w-0 h-14 rounded-[8px] bg-[#242424] border border-white/10 text-center font-montserrat font-bold text-xl text-white focus:outline-none focus:border-white/30 transition-colors"
                   />
                   <button
-                    onClick={() => setTeam1Score(team1Score + 1)}
+                    onClick={() => setTeam1Score(team1.score + 1)}
                     className="flex-shrink-0 w-20 h-14 rounded-[8px] bg-[#a855f7] hover:bg-[#9333ea] flex items-center justify-center font-bold text-2xl text-white transition-colors cursor-pointer"
                   >
                     +
@@ -111,14 +117,14 @@ export default function LiveMatchControl() {
 
           {/* Action Buttons */}
           <div className="flex items-center gap-4 w-full">
-            <button className="flex-1 py-4 rounded-[12px] bg-[#1A1A1A]/60 backdrop-blur-xl border border-white/10 text-zinc-400 hover:text-white hover:bg-white/5 font-poppins text-sm font-medium transition-colors cursor-pointer shadow-lg">
+            <button
+              onClick={swapTeams}
+              className="flex-1 py-4 rounded-[12px] bg-[#1A1A1A]/60 backdrop-blur-xl border border-white/10 text-zinc-400 hover:text-white hover:bg-white/5 font-poppins text-sm font-medium transition-colors cursor-pointer shadow-lg"
+            >
               Swap Teams
             </button>
             <button
-              onClick={() => {
-                setTeam1Score(0);
-                setTeam2Score(0);
-              }}
+              onClick={resetScores}
               className="flex-1 py-4 rounded-[12px] bg-[#1A1A1A]/60 backdrop-blur-xl border border-red-500/30 text-red-500 hover:bg-red-500/10 hover:border-red-500/60 font-poppins text-sm font-medium transition-colors cursor-pointer shadow-[0_0_15px_rgba(239,68,68,0.1)]"
             >
               Reset Score
@@ -141,7 +147,7 @@ export default function LiveMatchControl() {
                 </label>
                 <input
                   type="text"
-                  value={team2Name}
+                  value={team2.name}
                   onChange={(e) => setTeam2Name(e.target.value)}
                   className="w-full rounded-[8px] bg-[#242424] border border-white/10 px-4 py-3.5 text-sm text-white focus:outline-none focus:border-white/30 transition-colors"
                 />
@@ -152,19 +158,19 @@ export default function LiveMatchControl() {
                 </label>
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() => setTeam2Score(Math.max(0, team2Score - 1))}
+                    onClick={() => setTeam2Score(team2.score - 1)}
                     className="flex-shrink-0 w-20 h-14 rounded-[8px] bg-[#eab308] hover:bg-[#ca8a04] flex items-center justify-center font-bold text-2xl text-[#1a1a1a] transition-colors cursor-pointer"
                   >
                     -
                   </button>
                   <input
                     type="number"
-                    value={team2Score}
+                    value={team2.score}
                     onChange={(e) => setTeam2Score(Number(e.target.value))}
                     className="flex-1 min-w-0 h-14 rounded-[8px] bg-[#242424] border border-white/10 text-center font-montserrat font-bold text-xl text-white focus:outline-none focus:border-white/30 transition-colors"
                   />
                   <button
-                    onClick={() => setTeam2Score(team2Score + 1)}
+                    onClick={() => setTeam2Score(team2.score + 1)}
                     className="flex-shrink-0 w-20 h-14 rounded-[8px] bg-[#eab308] hover:bg-[#ca8a04] flex items-center justify-center font-bold text-2xl text-[#1a1a1a] transition-colors cursor-pointer"
                   >
                     +

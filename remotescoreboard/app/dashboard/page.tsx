@@ -8,8 +8,10 @@ import StreamingSource from "@/components/dashboard/StreamingSource";
 import LiveMatchControl from "@/components/dashboard/LiveMatchControl";
 import Footer from "@/components/common/footer";
 import gsap from "gsap";
+import { useScoreboardInit } from "@/hooks/useScoreboardInit";
 
 export default function DashboardPage() {
+  useScoreboardInit(); // Panggil hook inisialisasi di sini
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
