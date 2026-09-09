@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import SplashScreen from "@/components/SplashScreen";
 import Header from "@/components/common/header";
 import HeroSection from "@/components/landing/HeroSection";
+import EasySetupSection from "@/components/landing/EasySetupSection";
 
 export default function Home() {
   const [showSplash, setShowSplash] = useState(true);
@@ -17,7 +18,7 @@ export default function Home() {
   }, [showSplash]);
 
   return (
-    <main className="bg-background text-white overflow-x-hidden">
+    <main className="bg-[#0C0C0C] text-white overflow-x-hidden">
       {/* SplashScreen */}
       {showSplash && (
         <SplashScreen onComplete={() => setShowSplash(false)} />
@@ -27,6 +28,7 @@ export default function Home() {
         <>
           <Header />
           <HeroSection />
+          <EasySetupSection />
         </>
       )}
     </main>
