@@ -161,23 +161,10 @@ export default function LoginForm({ onToggleToRegister }: LoginFormProps) {
             </a>
           </div>
 
-          {/* Divider */}
-          <div className="relative flex items-center justify-center py-2">
-            <div className="w-full border-t border-white/[0.08]" />
-            <span className="absolute bg-[#1a1a1a] px-3 text-[11px] font-medium tracking-wider text-zinc-500 uppercase">
-              or
-            </span>
+          {/* Divider & Google OAuth (Disabled for MVP: Operator accounts are pre-seeded) */}
+          <div className="pt-2 text-center text-xs text-zinc-500 font-poppins">
+            <span>Operator access only &bull; Credentials provisioned by Admin</span>
           </div>
-
-          {/* Google OAuth Button */}
-          <button
-            type="button"
-            onClick={handleGoogleSignIn}
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.1] text-xs font-montserrat font-medium text-zinc-200 transition duration-200 cursor-pointer"
-          >
-            <GoogleIcon className="w-4 h-4" />
-            <span>Continue with Google</span>
-          </button>
 
           {/* Bottom Switch to Register */}
           <div className="text-center pt-2 text-xs text-zinc-400">
