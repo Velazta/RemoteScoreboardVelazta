@@ -139,7 +139,7 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section className="relative w-full min-h-screen overflow-hidden bg-[#0C0C0C]">
+    <section id="home" className="relative w-full min-h-screen overflow-hidden bg-[#0C0C0C]">
       {/* ── LAYER 0: BACKGROUND ── */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -223,14 +223,14 @@ export default function HeroSection() {
             <Link
               ref={btnRef}
               href="/auth/register"
-              className="mt-4 self-center lg:self-start opacity-0 flex items-center gap-3 px-8 py-4 rounded-full
+              className="group mt-4 self-center lg:self-start opacity-0 inline-flex items-center gap-3 px-8 py-4 rounded-full
                 bg-[#1A1A1A]/80 backdrop-blur-md border border-white/20
                 font-montserrat font-medium text-[18px] tracking-widest text-white uppercase
-                hover:bg-white/10 hover:border-white/40 hover:scale-[1.03]
-                transition-all duration-300 ease-out shadow-[0_4px_24px_rgba(0,0,0,0.5)]"
+                hover:bg-white/10 hover:border-white/40 hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(255,255,255,0.15)]
+                transition-all duration-300 ease-out shadow-[0_4px_24px_rgba(0,0,0,0.5)] cursor-pointer"
             >
               CREATE CUSTOM
-              <span className="text-lg leading-none transform translate-y-[-1px]">→</span>
+              <span className="text-lg leading-none transform translate-y-[-1px] group-hover:translate-x-1 transition-transform duration-300">→</span>
             </Link>
           </div>
         </div>
