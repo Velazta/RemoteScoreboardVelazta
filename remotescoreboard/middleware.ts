@@ -3,40 +3,25 @@ import { createServerClient } from "@supabase/ssr";
 
 /**
  * Next.js Middleware for Auth & Protected Route Routing
+ * Wrapped safely to prevent MIDDLEWARE_INVOCATION_FAILED crashes on edge.
  */
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
+  const response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   });
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) =>
-          request.cookies.set(name, value)
-        );
-        response = NextResponse.next({
-          request,
-        });
-        cookiesToSet.forEach(({ name, value, options }) =>
-          response.cookies.set(name, value, options)
-        );
-      },
-    },
-  });
-
-  // Refresh user session if present
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Safe fallback if env vars are missing during deployment initialization
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn(
+      "[Middleware] Warning: NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is missing."
+    );
+    return response;
+  }
 
   const pathname = request.nextUrl.pathname;
 
@@ -45,28 +30,53 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // Define protected routes that require authentication
-  const protectedRoutes = ["/dashboard", "/panel", "/overlay-editor"];
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
+  try {
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value);
+            response.cookies.set(name, value, options);
+          });
+        },
+      },
+    });
 
-  // If user tries to access protected custom panel without logging in -> redirect to login
-  if (isProtectedRoute && !user) {
-    const loginUrl = new URL("/auth/login", request.url);
-    loginUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(loginUrl);
+    // Refresh user session if present
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    // Define protected routes that require authentication
+    const protectedRoutes = ["/dashboard", "/panel", "/overlay-editor"];
+    const isProtectedRoute = protectedRoutes.some((route) =>
+      pathname.startsWith(route)
+    );
+
+    // If user tries to access protected custom panel without logging in -> redirect to login
+    if (isProtectedRoute && !user) {
+      const loginUrl = new URL("/auth/login", request.url);
+      loginUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // If user is already authenticated and tries to visit login or register -> redirect to dashboard
+    if (
+      user &&
+      (pathname.startsWith("/auth/login") || pathname.startsWith("/auth/register"))
+    ) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+
+    return response;
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("[Middleware Exception]:", msg);
+    return response;
   }
-
-  // If user is already authenticated and tries to visit login or register -> redirect to dashboard
-  if (
-    user &&
-    (pathname.startsWith("/auth/login") || pathname.startsWith("/auth/register"))
-  ) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
-  return response;
 }
 
 export const config = {
