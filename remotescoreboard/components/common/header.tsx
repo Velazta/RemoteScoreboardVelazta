@@ -4,14 +4,13 @@ import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import gsap from "gsap";
+import { createClient } from "@/lib/supabase/client";
 
 export default function Header() {
     const headerRef = useRef<HTMLDivElement>(null);
-
     const [hoveredBtn, setHoveredBtn] = useState<"signin" | "signup">("signup");
-    
-    // 1. STATE BARU: Untuk membuka/menutup menu di Mobile
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
     useEffect(() => {
         // Simple GSAP fade-in + slide-down animation
@@ -22,7 +21,26 @@ export default function Header() {
                 { opacity: 1, y: 0, duration: 2, ease: "power3.out" }
             );
         }
+
+        const supabase = createClient();
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user) setIsAuthenticated(true);
+        });
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setIsAuthenticated(!!session?.user);
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
     }, []);
+
+    const handleSignOut = async () => {
+        const supabase = createClient();
+        await supabase.auth.signOut();
+        window.location.href = "/";
+    };
 
     const scrollToSection = (id: string, e?: React.MouseEvent) => {
         if (e) e.preventDefault();
@@ -42,10 +60,10 @@ export default function Header() {
             className="fixed top-0 left-0 w-full bg-transparent text-[#ffffff] z-50"
             style={{ padding: "20px 10px 10px 20px" }}>
 
-            {/* 2. PENYESUAIAN CONTAINER: Pakai justify-between untuk mobile, dan gap-[270px] dikembalikan saat layar besar (xl) */}
+            {/* Container */}
             <div className="flex items-center justify-between xl:justify-center gap-4 xl:gap-[380px] w-full pr-4 md:pr-0">
                 
-                {/* left side (TIDAK DIUBAH) */}
+                {/* Left side */}
                 <Link href="/" className="flex items-center gap-3">
                     <div className="flex items-center gap-3">
                         <div className="relative w-10 h-10 rounded-full overflow-hidden">
@@ -59,8 +77,7 @@ export default function Header() {
                     </div>
                 </Link>
 
-
-                {/* middle navigation buttons (Direct Smooth Scroll without page re-render) */}
+                {/* Middle navigation buttons */}
                 <div className="hidden md:flex items-center gap-8 font-poppins font-light text-sm">
                     <button onClick={(e) => scrollToSection("home", e)} className="hover:text-[#999999] transition-colors duration-300 cursor-pointer">HOME</button>
                     <button onClick={(e) => scrollToSection("tutorials", e)} className="hover:text-[#999999] transition-colors duration-300 cursor-pointer">TUTORIALS</button>
@@ -69,41 +86,59 @@ export default function Header() {
                     <button onClick={(e) => scrollToSection("custom", e)} className="hover:text-[#999999] transition-colors duration-300 cursor-pointer">CUSTOM</button>
                 </div>
 
-
-                {/* right side & Hamburger Menu */}
+                {/* Right side & Hamburger Menu */}
                 <div className="flex items-center gap-4">
-                    {/* Tombol Auth (Disembunyikan di HP layar sangat kecil (sm) agar tidak sempit, dipindah ke menu dropdown) */}
-                    <div
-                        className="hidden sm:flex relative items-center p-1"
-                        // Mengembalikan posisi background ke Sign Up jika kursor keluar dari area tombol
-                        onMouseLeave={() => setHoveredBtn("signup")}
-                    >
+                    {isAuthenticated ? (
+                        <div className="hidden sm:flex items-center gap-3">
+                            <Link
+                                href="/dashboard"
+                                className="px-5 py-2 rounded-full bg-white text-black font-poppins font-semibold text-sm hover:bg-zinc-200 transition-colors shadow-md"
+                            >
+                                Dashboard
+                            </Link>
+                            <button
+                                onClick={handleSignOut}
+                                className="px-4 py-2 rounded-full border border-white/20 text-white font-poppins text-xs hover:bg-white/10 transition-colors cursor-pointer"
+                            >
+                                Sign Out
+                            </button>
+                        </div>
+                    ) : (
+                        /* Tombol Auth */
                         <div
-                            className={`absolute top-1 bottom-1 w-[90px] rounded-full bg-[#ffffff] shadow-md transition-transform duration-300 ease-out ${hoveredBtn === "signin" ? "translate-x-0" : "translate-x-[90px]"
-                                }`}
-                        />
-                        {/* Tombol Sign In */}
-                        <Link
-                            href="/auth/login"
-                            onMouseEnter={() => setHoveredBtn("signin")}
-                            className={`relative z-10 w-[90px] text-center py-2 font-poppins font-semibold text-sm transition-colors duration-300 ${hoveredBtn === "signin" ? "text-[#000000]" : "text-[#ffffff]"
-                                }`}
+                            className="hidden sm:flex relative items-center p-1"
+                            onMouseLeave={() => setHoveredBtn("signup")}
                         >
-                            Sign In
-                        </Link>
-
-                        {/* Tombol Sign Up */}
-                        <Link
-                            href="/auth/register"
-                            onMouseEnter={() => setHoveredBtn("signup")}
-                            className={`relative z-10 w-[90px] text-center py-2 font-poppins font-semibold text-sm transition-colors duration-300 ${hoveredBtn === "signup" ? "text-[#000000]" : "text-[#ffffff]"
+                            <div
+                                className={`absolute top-1 bottom-1 w-[90px] rounded-full bg-[#ffffff] shadow-md transition-transform duration-300 ease-out ${
+                                    hoveredBtn === "signin" ? "translate-x-0" : "translate-x-[90px]"
                                 }`}
-                        >
-                            Sign Up
-                        </Link>
-                    </div>
+                            />
+                            {/* Tombol Sign In */}
+                            <Link
+                                href="/auth/login"
+                                onMouseEnter={() => setHoveredBtn("signin")}
+                                className={`relative z-10 w-[90px] text-center py-2 font-poppins font-semibold text-sm transition-colors duration-300 ${
+                                    hoveredBtn === "signin" ? "text-[#000000]" : "text-[#ffffff]"
+                                }`}
+                            >
+                                Sign In
+                            </Link>
 
-                    {/* 3. TOMBOL HAMBURGER KHUSUS MOBILE */}
+                            {/* Tombol Sign Up */}
+                            <Link
+                                href="/auth/register"
+                                onMouseEnter={() => setHoveredBtn("signup")}
+                                className={`relative z-10 w-[90px] text-center py-2 font-poppins font-semibold text-sm transition-colors duration-300 ${
+                                    hoveredBtn === "signup" ? "text-[#000000]" : "text-[#ffffff]"
+                                }`}
+                            >
+                                Sign Up
+                            </Link>
+                        </div>
+                    )}
+
+                    {/* Tombol Hamburger Mobile */}
                     <button 
                         className="md:hidden text-white focus:outline-none"
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -119,7 +154,7 @@ export default function Header() {
                 </div>
             </div>
 
-            {/* 4. DROPDOWN MENU MOBILE (Muncul jika tombol hamburger diklik) */}
+            {/* Dropdown Menu Mobile */}
             {isMobileMenuOpen && (
                 <div className="md:hidden absolute top-full left-0 w-full bg-black/95 backdrop-blur-md py-6 px-4 flex flex-col items-center gap-6 border-t border-gray-800">
                     <button onClick={(e) => scrollToSection("home", e)} className="font-poppins font-light text-sm hover:text-[#999999] cursor-pointer">HOME</button>
@@ -128,11 +163,17 @@ export default function Header() {
                     <button onClick={(e) => scrollToSection("faq", e)} className="font-poppins font-light text-sm hover:text-[#999999] cursor-pointer">FAQ</button>
                     <button onClick={(e) => scrollToSection("custom", e)} className="font-poppins font-light text-sm hover:text-[#999999] cursor-pointer">CUSTOM</button>
                     
-                    {/* Tombol Auth versi Mobile */}
-                    <div className="flex sm:hidden gap-4 mt-2">
-                        <Link href="/auth/login" className="px-6 py-2 border border-white rounded-full font-poppins text-sm font-semibold text-white">Sign In</Link>
-                        <Link href="/auth/register" className="px-6 py-2 bg-white text-black rounded-full font-poppins text-sm font-semibold">Sign Up</Link>
-                    </div>
+                    {isAuthenticated ? (
+                        <div className="flex sm:hidden gap-3 mt-2">
+                            <Link href="/dashboard" className="px-6 py-2 bg-white text-black rounded-full font-poppins text-sm font-semibold">Dashboard</Link>
+                            <button onClick={handleSignOut} className="px-4 py-2 border border-white/20 text-white rounded-full font-poppins text-xs">Sign Out</button>
+                        </div>
+                    ) : (
+                        <div className="flex sm:hidden gap-4 mt-2">
+                            <Link href="/auth/login" className="px-6 py-2 border border-white rounded-full font-poppins text-sm font-semibold text-white">Sign In</Link>
+                            <Link href="/auth/register" className="px-6 py-2 bg-white text-black rounded-full font-poppins text-sm font-semibold">Sign Up</Link>
+                        </div>
+                    )}
                 </div>
             )}
         </header>

@@ -175,7 +175,21 @@ export async function getOrCreateInitialMatch() {
     { layout_id: newLayout.id, element_key: "team2_score", pos_x: 1150, pos_y: 150, width: 120, height: 60, align: "center" },
   ];
 
-  await supabase.from("layout_elements").insert(defaultElementsToInsert);
+  const { data: insertedElements } = await supabase
+    .from("layout_elements")
+    .insert(defaultElementsToInsert)
+    .select();
+
+  const elementsMapWithId: Record<ElementKey, ElementPositionState> = { ...DEFAULT_ELEMENTS };
+
+  if (insertedElements) {
+    insertedElements.forEach((el: DbLayoutElement) => {
+      const key = el.element_key as ElementKey;
+      if (key in elementsMapWithId) {
+        elementsMapWithId[key].id = el.id;
+      }
+    });
+  }
 
   const obsToken = generateObsToken();
   const { data: newMatch, error: matchInsertError } = await supabase
@@ -233,6 +247,100 @@ export async function getOrCreateInitialMatch() {
       teamNameSize: newLayout.name_font_size,
       scoreSize: newLayout.score_font_size,
     },
-    elements: DEFAULT_ELEMENTS,
+    elements: elementsMapWithId,
+  };
+}
+
+export async function getMatchByObsToken(obsToken: string) {
+  const { data: matchData, error } = await supabase
+    .from("matches")
+    .select(`
+      id,
+      status,
+      layout_id,
+      layouts (
+        id,
+        name,
+        background_image_url,
+        custom_font_url,
+        font_family,
+        name_font_size,
+        score_font_size,
+        layout_elements (
+          id,
+          element_key,
+          pos_x,
+          pos_y,
+          width,
+          height,
+          align
+        )
+      ),
+      teams (
+        id,
+        slot,
+        name,
+        score,
+        name_color,
+        score_color
+      )
+    `)
+    .eq("obs_token", obsToken)
+    .single();
+
+  if (error || !matchData) {
+    return null;
+  }
+
+  const layoutData = Array.isArray(matchData.layouts) ? matchData.layouts[0] : matchData.layouts;
+  const teamsList = matchData.teams ?? [];
+
+  const team1Data = teamsList.find((t: DbTeam) => t.slot === "team1") ?? DEFAULT_TEAM_1;
+  const team2Data = teamsList.find((t: DbTeam) => t.slot === "team2") ?? DEFAULT_TEAM_2;
+
+  const elementsMap: Record<ElementKey, ElementPositionState> = { ...DEFAULT_ELEMENTS };
+
+  if (layoutData?.layout_elements) {
+    layoutData.layout_elements.forEach((el: DbLayoutElement) => {
+      const key = el.element_key as ElementKey;
+      if (key in elementsMap) {
+        elementsMap[key] = {
+          id: el.id,
+          x: Number(el.pos_x),
+          y: Number(el.pos_y),
+          width: Number(el.width),
+          height: Number(el.height),
+          align: el.align ?? "center",
+        };
+      }
+    });
+  }
+
+  return {
+    matchId: matchData.id,
+    team1: {
+      id: team1Data.id,
+      name: team1Data.name,
+      score: team1Data.score,
+      nameColor: team1Data.name_color ?? "#ffffff",
+      scoreColor: team1Data.score_color ?? "#ffffff",
+    },
+    team2: {
+      id: team2Data.id,
+      name: team2Data.name,
+      score: team2Data.score,
+      nameColor: team2Data.name_color ?? "#ffffff",
+      scoreColor: team2Data.score_color ?? "#ffffff",
+    },
+    layout: {
+      id: layoutData?.id,
+      name: layoutData?.name ?? "Default Esports Layout",
+      backgroundImageUrl: layoutData?.background_image_url ?? null,
+      customFontUrl: layoutData?.custom_font_url ?? null,
+      fontFamily: layoutData?.font_family ?? "Montserrat",
+      teamNameSize: layoutData?.name_font_size ?? 90,
+      scoreSize: layoutData?.score_font_size ?? 90,
+    },
+    elements: elementsMap,
   };
 }

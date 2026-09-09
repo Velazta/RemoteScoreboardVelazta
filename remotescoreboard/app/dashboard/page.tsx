@@ -9,9 +9,11 @@ import LiveMatchControl from "@/components/dashboard/LiveMatchControl";
 import Footer from "@/components/common/footer";
 import gsap from "gsap";
 import { useScoreboardInit } from "@/hooks/useScoreboardInit";
+import { useAutoSave } from "@/hooks/useAutoSave";
 
 export default function DashboardPage() {
   useScoreboardInit(); // Panggil hook inisialisasi di sini
+  useAutoSave(); // Auto-save trigger
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

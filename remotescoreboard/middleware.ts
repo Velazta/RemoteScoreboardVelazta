@@ -40,8 +40,13 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
+  // Redirect /custom to /dashboard
+  if (pathname === "/custom" || pathname === "/custom/") {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
   // Define protected routes that require authentication
-  const protectedRoutes = ["/custom", "/panel", "/dashboard", "/overlay-editor"];
+  const protectedRoutes = ["/dashboard", "/panel", "/overlay-editor"];
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );
@@ -53,12 +58,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // If user is already authenticated and tries to visit login or register -> redirect to custom panel
+  // If user is already authenticated and tries to visit login or register -> redirect to dashboard
   if (
     user &&
     (pathname.startsWith("/auth/login") || pathname.startsWith("/auth/register"))
   ) {
-    return NextResponse.redirect(new URL("/custom", request.url));
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   return response;

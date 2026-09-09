@@ -1,10 +1,29 @@
 "use client";
 
-import React from "react";
-import { Radio, Copy } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Radio, Copy, Check } from "lucide-react";
+import { useScoreboardStore } from "@/store/useScoreboardStore";
 
 export default function StreamingSource() {
-  const obsUrl = "https://velazta.live/obs/match-tqq02a";
+  const obsToken = useScoreboardStore((state) => state.obsToken);
+  const [obsUrl, setObsUrl] = useState("https://velazta.live/obs/...");
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && obsToken) {
+      setObsUrl(`${window.location.origin}/obs/${obsToken}`);
+    }
+  }, [obsToken]);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(obsUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error("Gagal menyalin link");
+    }
+  };
 
   return (
     <div className="flex flex-col w-full rounded-[12px] border border-white/10 bg-[#1A1A1A]/80 backdrop-blur-xl p-6 gap-3 shadow-lg">
@@ -28,9 +47,12 @@ export default function StreamingSource() {
             {obsUrl}
           </span>
         </div>
-        <button className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-[8px] bg-[#a855f7] hover:bg-[#9333ea] active:scale-95 transition-all text-white font-montserrat font-bold text-sm shadow-[0_0_15px_rgba(168,85,247,0.4)] cursor-pointer whitespace-nowrap flex-shrink-0">
-          <Copy className="w-4 h-4" />
-          Copy Link
+        <button
+          onClick={handleCopy}
+          className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-[8px] bg-[#a855f7] hover:bg-[#9333ea] active:scale-95 transition-all text-white font-montserrat font-bold text-sm shadow-[0_0_15px_rgba(168,85,247,0.4)] cursor-pointer whitespace-nowrap flex-shrink-0"
+        >
+          {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+          {copied ? "Copied!" : "Copy Link"}
         </button>
       </div>
     </div>
