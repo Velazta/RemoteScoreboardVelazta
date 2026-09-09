@@ -24,6 +24,18 @@ export default function Header() {
         }
     }, []);
 
+    const scrollToSection = (id: string, e?: React.MouseEvent) => {
+        if (e) e.preventDefault();
+        setIsMobileMenuOpen(false);
+
+        const element = document.getElementById(id);
+        if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else {
+            window.location.href = `/#${id}`;
+        }
+    };
+
     return (
         <header
             ref={headerRef}
@@ -48,13 +60,13 @@ export default function Header() {
                 </Link>
 
 
-                {/* middle (TIDAK DIUBAH) */}
+                {/* middle navigation buttons (Direct Smooth Scroll without page re-render) */}
                 <div className="hidden md:flex items-center gap-8 font-poppins font-light text-sm">
-                    <Link href="/" className="hover:text-[#999999] transition-colors duration-300">HOME</Link>
-                    <Link href="#tutorials" className="hover:text-[#999999] transition-colors duration-300">TUTORIALS</Link>
-                    <Link href="#guide" className="hover:text-[#999999] transition-colors duration-300">GUIDE</Link>
-                    <Link href="#custom" className="hover:text-[#999999] transition-colors duration-300">CUSTOM</Link>
-                    <Link href="#faq" className="hover:text-[#999999] transition-colors duration-300">FAQ</Link>
+                    <button onClick={(e) => scrollToSection("home", e)} className="hover:text-[#999999] transition-colors duration-300 cursor-pointer">HOME</button>
+                    <button onClick={(e) => scrollToSection("tutorials", e)} className="hover:text-[#999999] transition-colors duration-300 cursor-pointer">TUTORIALS</button>
+                    <button onClick={(e) => scrollToSection("features", e)} className="hover:text-[#999999] transition-colors duration-300 cursor-pointer">FEATURE</button>
+                    <button onClick={(e) => scrollToSection("faq", e)} className="hover:text-[#999999] transition-colors duration-300 cursor-pointer">FAQ</button>
+                    <button onClick={(e) => scrollToSection("custom", e)} className="hover:text-[#999999] transition-colors duration-300 cursor-pointer">CUSTOM</button>
                 </div>
 
 
@@ -110,11 +122,11 @@ export default function Header() {
             {/* 4. DROPDOWN MENU MOBILE (Muncul jika tombol hamburger diklik) */}
             {isMobileMenuOpen && (
                 <div className="md:hidden absolute top-full left-0 w-full bg-black/95 backdrop-blur-md py-6 px-4 flex flex-col items-center gap-6 border-t border-gray-800">
-                    <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="font-poppins font-light text-sm hover:text-[#999999]">HOME</Link>
-                    <Link href="#tutorials" onClick={() => setIsMobileMenuOpen(false)} className="font-poppins font-light text-sm hover:text-[#999999]">TUTORIALS</Link>
-                    <Link href="#guide" onClick={() => setIsMobileMenuOpen(false)} className="font-poppins font-light text-sm hover:text-[#999999]">GUIDE</Link>
-                    <Link href="#custom" onClick={() => setIsMobileMenuOpen(false)} className="font-poppins font-light text-sm hover:text-[#999999]">CUSTOM</Link>
-                    <Link href="#faq" onClick={() => setIsMobileMenuOpen(false)} className="font-poppins font-light text-sm hover:text-[#999999]">FAQ</Link>
+                    <button onClick={(e) => scrollToSection("home", e)} className="font-poppins font-light text-sm hover:text-[#999999] cursor-pointer">HOME</button>
+                    <button onClick={(e) => scrollToSection("tutorials", e)} className="font-poppins font-light text-sm hover:text-[#999999] cursor-pointer">TUTORIALS</button>
+                    <button onClick={(e) => scrollToSection("features", e)} className="font-poppins font-light text-sm hover:text-[#999999] cursor-pointer">FEATURE</button>
+                    <button onClick={(e) => scrollToSection("faq", e)} className="font-poppins font-light text-sm hover:text-[#999999] cursor-pointer">FAQ</button>
+                    <button onClick={(e) => scrollToSection("custom", e)} className="font-poppins font-light text-sm hover:text-[#999999] cursor-pointer">CUSTOM</button>
                     
                     {/* Tombol Auth versi Mobile */}
                     <div className="flex sm:hidden gap-4 mt-2">

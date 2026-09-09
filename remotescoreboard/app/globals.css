@@ -5,6 +5,7 @@
   --font-montserrat: var(--font-montserrat), sans-serif;
   --color-background: #0C0C0C;
   --color-foreground: #ededed;
+  --animate-marquee: marquee 25s linear infinite;
 }
 
 :root {
@@ -24,4 +25,14 @@ body {
 
 .font-poppins {
   font-family: var(--font-poppins);
+}
+
+/* ── Marquee Scroll Animation ── */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-marquee {
+  animation: marquee 25s linear infinite;
 }

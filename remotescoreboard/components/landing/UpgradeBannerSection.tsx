@@ -49,6 +49,7 @@ export default function UpgradeBannerSection() {
 
   return (
     <section 
+      id="custom"
       ref={containerRef} 
       className="relative w-full flex flex-col items-center justify-end overflow-hidden mt-12 sm:mt-20"
     >

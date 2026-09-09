@@ -139,7 +139,7 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section className="relative w-full min-h-screen overflow-hidden bg-[#0C0C0C]">
+    <section id="home" className="relative w-full min-h-screen overflow-hidden bg-[#0C0C0C]">
       {/* ── LAYER 0: BACKGROUND ── */}
       <div className="absolute inset-0 z-0">
         <Image

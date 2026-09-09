@@ -5,6 +5,7 @@ import Image from "next/image";
 import SplashScreen from "@/components/SplashScreen";
 import Header from "@/components/common/header";
 import HeroSection from "@/components/landing/HeroSection";
+import RunningLogoBanner from "@/components/landing/RunningLogoBanner";
 import EasySetupSection from "@/components/landing/EasySetupSection";
 import MainFeatureSection from "@/components/landing/MainFeatureSection";
 import FaqSection from "@/components/landing/FaqSection";
@@ -52,6 +53,7 @@ export default function Home() {
 
             {/* Content Sections seamlessly rendered on the same background */}
             <div className="relative z-10 flex flex-col">
+              <RunningLogoBanner />
               <EasySetupSection />
               <MainFeatureSection />
               <FaqSection />
