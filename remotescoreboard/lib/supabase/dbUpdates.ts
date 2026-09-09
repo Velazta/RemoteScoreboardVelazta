@@ -6,13 +6,18 @@ export async function updateTeam(
   teamId: string,
   data: { name: string; score: number; name_color: string; score_color: string }
 ) {
-  const { error } = await supabase
+  console.log("[dbUpdates] updateTeam →", teamId, data);
+
+  const { data: updated, error } = await supabase
     .from("teams")
     .update(data)
-    .eq("id", teamId);
-    
+    .eq("id", teamId)
+    .select("id");
+
   if (error) {
-    console.error("Gagal update team:", error.message);
+    console.error("[dbUpdates] updateTeam FAILED:", error.message, "code:", error.code);
+  } else {
+    console.log("[dbUpdates] updateTeam OK — rows updated:", updated?.length ?? 0);
   }
 }
 
@@ -32,7 +37,7 @@ export async function updateLayout(
     .eq("id", layoutId);
 
   if (error) {
-    console.error("Gagal update layout:", error.message);
+    console.error("[dbUpdates] updateLayout FAILED:", error.message);
   }
 }
 
@@ -52,6 +57,6 @@ export async function updateElement(
     .eq("id", elementId);
 
   if (error) {
-    console.error("Gagal update layout element:", error.message);
+    console.error("[dbUpdates] updateElement FAILED:", error.message);
   }
 }

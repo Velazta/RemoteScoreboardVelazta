@@ -93,10 +93,15 @@ export async function getOrCreateInitialMatch() {
   if (existingMatches && existingMatches.length > 0) {
     const match = existingMatches[0] as unknown as DbMatch;
     const layoutData = Array.isArray(match.layouts) ? match.layouts[0] : match.layouts;
-    const teamsList = match.teams ?? [];
+    const teamsList = (match.teams ?? []) as DbTeam[];
 
-    const team1Data = teamsList.find((t: DbTeam) => t.slot === "team1") ?? DEFAULT_TEAM_1;
-    const team2Data = teamsList.find((t: DbTeam) => t.slot === "team2") ?? DEFAULT_TEAM_2;
+    // Sort by slot alphabetically so any slot naming works:
+    // "a"/"b", "team1"/"team2", "1"/"2" etc. — first sorted = team1, second = team2.
+    const sortedTeams = [...teamsList].sort((a, b) =>
+      (a.slot ?? "").localeCompare(b.slot ?? "")
+    );
+    const team1Data = sortedTeams[0] ?? DEFAULT_TEAM_1;
+    const team2Data = sortedTeams[1] ?? DEFAULT_TEAM_2;
 
     // Parsing elemen menggunakan map murni
     const elementsMap: Record<ElementKey, ElementPositionState> = { ...DEFAULT_ELEMENTS };
@@ -293,10 +298,14 @@ export async function getMatchByObsToken(obsToken: string) {
   }
 
   const layoutData = Array.isArray(matchData.layouts) ? matchData.layouts[0] : matchData.layouts;
-  const teamsList = matchData.teams ?? [];
+  const teamsList = (matchData.teams ?? []) as DbTeam[];
 
-  const team1Data = teamsList.find((t: DbTeam) => t.slot === "team1") ?? DEFAULT_TEAM_1;
-  const team2Data = teamsList.find((t: DbTeam) => t.slot === "team2") ?? DEFAULT_TEAM_2;
+  // Sort alphabetically by slot so any naming (a/b, team1/team2, etc.) works consistently
+  const sortedTeams = [...teamsList].sort((a, b) =>
+    (a.slot ?? "").localeCompare(b.slot ?? "")
+  );
+  const team1Data = sortedTeams[0] ?? DEFAULT_TEAM_1;
+  const team2Data = sortedTeams[1] ?? DEFAULT_TEAM_2;
 
   const elementsMap: Record<ElementKey, ElementPositionState> = { ...DEFAULT_ELEMENTS };
 

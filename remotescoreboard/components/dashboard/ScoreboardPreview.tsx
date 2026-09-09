@@ -218,9 +218,11 @@ export default function ScoreboardPreview() {
     if (file) processUpload(file);
   };
 
-  // ---- font / size helpers ----
-  const nameFontSize  = `${(layout.teamNameSize / CANVAS_H) * 100}cqh`;
-  const scoreFontSize = `${(layout.scoreSize    / CANVAS_H) * 100}cqh`;
+  // Font sizes in ABSOLUTE px — correct because elements live inside the
+  // fixed 1920×1080 layer that is CSS-scaled down. cqh/vh would resolve
+  // against the outer (small) container and produce wrong sizes.
+  const nameFontSize  = `${layout.teamNameSize}px`;
+  const scoreFontSize = `${layout.scoreSize}px`;
   const fontFamily    = layout.fontFamily || "Montserrat";
 
   const getContent = (key: ElementKey) => {

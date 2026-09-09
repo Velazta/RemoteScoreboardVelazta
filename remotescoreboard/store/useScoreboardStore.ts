@@ -105,7 +105,11 @@ export const useScoreboardStore = create<ScoreboardStore>((set) => ({
   setTeam1Score: (score) => set((state) => ({ team1: { ...state.team1, score: Math.max(0, score) } })),
   setTeam2Name: (name) => set((state) => ({ team2: { ...state.team2, name } })),
   setTeam2Score: (score) => set((state) => ({ team2: { ...state.team2, score: Math.max(0, score) } })),
-  swapTeams: () => set((state) => ({ team1: { ...state.team2 }, team2: { ...state.team1 } })),
+  swapTeams: () =>
+    set((state) => ({
+      team1: { ...state.team2, id: state.team1.id },
+      team2: { ...state.team1, id: state.team2.id },
+    })),
   resetScores: () => set((state) => ({ team1: { ...state.team1, score: 0 }, team2: { ...state.team2, score: 0 } })),
   setBackgroundImageUrl: (backgroundImageUrl) => set((state) => ({ layout: { ...state.layout, backgroundImageUrl } })),
   setCustomFontUrl: (customFontUrl, fontFamily = "CustomUploadedFont") => set((state) => ({ layout: { ...state.layout, customFontUrl, fontFamily } })),
