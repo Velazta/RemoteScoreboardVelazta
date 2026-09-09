@@ -12,9 +12,9 @@ export async function middleware(request: NextRequest) {
   });
 
   const supabaseUrl =
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-project.supabase.co";
+    process.env.NEXT_PUBLIC_SUPABASE_URL || "https://jpbrgkpydlevbgpdswbh.supabase.co";
   const supabaseAnonKey =
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key";
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_5LyQ4NLzbN5KrDPsBSalLg_9vbXkjks";
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
