@@ -31,9 +31,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${poppins.variable} ${montserrat.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col bg-[#0C0C0C] text-white font-poppins selection:bg-zinc-700 selection:text-white">
+      <body
+        suppressHydrationWarning
+        className="min-h-full flex flex-col bg-[#0C0C0C] text-white font-poppins selection:bg-zinc-700 selection:text-white"
+      >
         <SmoothScroll>{children}</SmoothScroll>
       </body>
     </html>

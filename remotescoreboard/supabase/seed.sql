@@ -1,0 +1,120 @@
+-- -- ==============================================================================
+-- -- VELAZTA REMOTE SCOREBOARD (VVELCASTING)
+-- -- SEED OPERATOR ACCOUNT & INITIAL SAMPLE DATA
+-- -- ==============================================================================
+
+-- -- 1. SEED AKUN OPERATOR MANUAL KE auth.users
+-- -- Silakan ubah email dan password sesuai kebutuhan Anda di bawah ini:
+-- -- Email: operator@velazta.com
+-- -- Password Default: Operator2026!
+-- -- ==============================================================================
+
+-- do $$
+-- declare
+--     v_user_id uuid := gen_random_uuid();
+--     v_email text := 'operator@velazta.com';
+--     v_password text := 'Operator2026!';
+--     v_layout_id uuid := gen_random_uuid();
+--     v_match_id uuid := gen_random_uuid();
+-- begin
+--     -- 1. Cek apakah user sudah ada
+--     if not exists (select 1 from auth.users where email = v_email) then
+        
+--         -- Insert ke auth.users dengan enkripsi bcrypt (pgcrypto)
+--         insert into auth.users (
+--             instance_id,
+--             id,
+--             aud,
+--             role,
+--             email,
+--             encrypted_password,
+--             email_confirmed_at,
+--             recovery_sent_at,
+--             last_sign_in_at,
+--             raw_app_meta_data,
+--             raw_user_meta_data,
+--             created_at,
+--             updated_at,
+--             confirmation_token,
+--             email_change,
+--             email_change_token_new,
+--             recovery_token
+--         )
+--         values (
+--             '00000000-0000-0000-0000-000000000000',
+--             v_user_id,
+--             'authenticated',
+--             'authenticated',
+--             v_email,
+--             crypt(v_password, gen_salt('bf')),
+--             now(), -- Otomatis terkonfirmasi tanpa perlu verifikasi email
+--             now(),
+--             now(),
+--             '{"provider":"email","providers":["email"]}',
+--             '{"full_name":"Velazta Operator"}',
+--             now(),
+--             now(),
+--             '',
+--             '',
+--             '',
+--             ''
+--         );
+
+--         -- Insert ke public.profiles (jika trigger belum jalan atau memastikan role operator)
+--         insert into public.profiles (id, email, full_name, role)
+--         values (v_user_id, v_email, 'Velazta Operator', 'operator')
+--         on conflict (id) do update set role = 'operator';
+
+--         -- 2. SEED CONTOH DEFAULT LAYOUT (1920x1080)
+--         insert into public.layouts (
+--             id,
+--             user_id,
+--             name,
+--             background_image_url,
+--             font_family,
+--             name_font_size,
+--             score_font_size,
+--             is_default
+--         ) values (
+--             v_layout_id,
+--             v_user_id,
+--             'Velazta Esports Standard 1080p',
+--             '/images/homepage/easy-setup/tablet-object-overlay.png',
+--             'Montserrat',
+--             24,
+--             42,
+--             true
+--         );
+
+--         -- 3. SEED CONTOH 4 ELEMEN KANVAS (layout_elements)
+--         insert into public.layout_elements (layout_id, element_key, pos_x, pos_y, width, height, align)
+--         values
+--             (v_layout_id, 'team1_name', 260, 80, 200, 45, 'center'),
+--             (v_layout_id, 'team1_score', 480, 70, 70, 65, 'center'),
+--             (v_layout_id, 'team2_score', 570, 70, 70, 65, 'center'),
+--             (v_layout_id, 'team2_name', 660, 80, 200, 45, 'center');
+
+--         -- 4. SEED CONTOH 1 MATCH SESI LIVE
+--         insert into public.matches (
+--             id,
+--             user_id,
+--             layout_id,
+--             status
+--         ) values (
+--             v_match_id,
+--             v_user_id,
+--             v_layout_id,
+--             'live'
+--         );
+
+--         -- 5. SEED 2 TIM (Slot A & Slot B)
+--         insert into public.teams (match_id, slot, name, score, name_color, score_color)
+--         values
+--             (v_match_id, 'a', 'SADNESS', 0, '#FFFFFF', '#FFD700'),
+--             (v_match_id, 'b', 'NBA', 0, '#FFFFFF', '#FFD700');
+
+--         raise notice 'Akun operator berhasil dibuat: % dengan password: %', v_email, v_password;
+--     else
+--         raise notice 'Akun operator % sudah ada di database.', v_email;
+--     end if;
+-- end $$;
