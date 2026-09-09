@@ -7,6 +7,9 @@ import Header from "@/components/common/header";
 import HeroSection from "@/components/landing/HeroSection";
 import EasySetupSection from "@/components/landing/EasySetupSection";
 import MainFeatureSection from "@/components/landing/MainFeatureSection";
+import FaqSection from "@/components/landing/FaqSection";
+import UpgradeBannerSection from "@/components/landing/UpgradeBannerSection";
+import Footer from "@/components/common/footer";
 
 export default function Home() {
   const [showSplash, setShowSplash] = useState(true);
@@ -51,8 +54,13 @@ export default function Home() {
             <div className="relative z-10 flex flex-col">
               <EasySetupSection />
               <MainFeatureSection />
+              <FaqSection />
+              <UpgradeBannerSection />
             </div>
           </div>
+
+          {/* Footer Component */}
+          <Footer />
         </>
       )}
     </main>

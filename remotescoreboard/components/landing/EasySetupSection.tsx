@@ -132,14 +132,14 @@ export default function EasySetupSection() {
             >
               <Link
                 href="#tutorial-video"
-                className="inline-flex items-center  gap-3 px-8 py-4 rounded-full
+                className="group inline-flex items-center gap-3 px-8 py-4 rounded-full
                   bg-[#1A1A1A]/80 backdrop-blur-md border border-white/20
-                  font-montserrat font-medium text-[16px] sm:text-[18px] tracking-widest text-white uppercase
-                  hover:bg-white/10 hover:border-white/40 hover:scale-[1.03]
+                  font-montserrat font-medium text-[18px] tracking-widest text-white uppercase
+                  hover:bg-white/10 hover:border-white/40 hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(255,255,255,0.15)]
                   transition-all duration-300 ease-out shadow-[0_4px_24px_rgba(0,0,0,0.5)] cursor-pointer"
               >
                 WATCH TUTORIAL
-                <span className="text-lg leading-none transform translate-y-[-1px]">→</span>
+                <span className="text-lg leading-none transform translate-y-[-1px] group-hover:translate-x-1 transition-transform duration-300">→</span>
               </Link>
             </div>
 
