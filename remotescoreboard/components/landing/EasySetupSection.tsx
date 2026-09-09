@@ -67,21 +67,8 @@ export default function EasySetupSection() {
     <section
       id="tutorials"
       ref={sectionRef}
-      className="relative w-full pt-20 pb-28 sm:pt-24 sm:pb-32 lg:pt-[79px] lg:pb-[113px] overflow-hidden bg-[#0C0C0C]"
+      className="relative w-full pt-16 pb-12 sm:pt-20 sm:pb-16 lg:pt-[79px] lg:pb-[60px] overflow-hidden bg-transparent"
     >
-      {/* ── BACKGROUND SMOKE TEXTURE (1440x2519) ── */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <Image
-          src="/images/homepage/background-content.png"
-          alt="Content Background"
-          fill
-          className="object-cover object-top opacity-60 mix-blend-screen"
-          sizes="100vw"
-        />
-        {/* Soft Vignette Gradients */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0C0C0C] via-transparent to-[#0C0C0C]" />
-      </div>
-
       {/* ── MAIN CONTAINER (1440px Canvas dengan 80px Padding Kiri-Kanan) ── */}
       <div className="relative z-10 w-full max-w-[1440px] mx-auto px-6 sm:px-12 lg:px-18">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-30 min-h-[500px]">
