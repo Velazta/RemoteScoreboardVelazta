@@ -3,15 +3,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Mail, Lock, Check, Eye, EyeOff } from "lucide-react";
 import AvatarBadge from "./AvatarBadge";
-import GoogleIcon from "./GoogleIcon";
 import { createClient } from "@/lib/supabase/client";
 import gsap from "gsap";
 
-interface LoginFormProps {
-  onToggleToRegister: () => void;
-}
-
-export default function LoginForm({ onToggleToRegister }: LoginFormProps) {
+export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -23,6 +18,14 @@ export default function LoginForm({ onToggleToRegister }: LoginFormProps) {
   const supabase = createClient();
 
   useEffect(() => {
+    // Check previously stored remember preference
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("remember_me");
+      if (stored === "true") {
+        setRememberMe(true);
+      }
+    }
+
     // Simple GSAP fade-in + slide-up animation
     if (formRef.current) {
       gsap.fromTo(
@@ -39,6 +42,17 @@ export default function LoginForm({ onToggleToRegister }: LoginFormProps) {
     setErrorMessage("");
 
     try {
+      // Set remember_me cookie & localStorage BEFORE auth call so custom cookie handlers know whether to set session cookie or persistent cookie
+      if (typeof window !== "undefined") {
+        if (rememberMe) {
+          localStorage.setItem("remember_me", "true");
+          document.cookie = `remember_me=true; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+        } else {
+          localStorage.setItem("remember_me", "false");
+          document.cookie = "remember_me=false; path=/; SameSite=Lax";
+        }
+      }
+
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -49,26 +63,12 @@ export default function LoginForm({ onToggleToRegister }: LoginFormProps) {
       } else {
         window.location.href = "/dashboard";
       }
-    } catch {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("[Login Error]:", msg);
       setErrorMessage("Terjadi kesalahan saat masuk.");
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-      if (error) {
-        setErrorMessage(error.message);
-      }
-    } catch {
-      setErrorMessage("Google OAuth belum dikonfigurasi pada Supabase.");
     }
   };
 
@@ -122,7 +122,7 @@ export default function LoginForm({ onToggleToRegister }: LoginFormProps) {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 text-zinc-500 hover:text-zinc-300 transition-colors"
+              className="absolute right-3 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -132,7 +132,7 @@ export default function LoginForm({ onToggleToRegister }: LoginFormProps) {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full mt-2 py-3.5 px-4 rounded-xl font-montserrat font-semibold text-sm tracking-wide text-zinc-950 bg-gradient-to-r from-[#363636] via-[#a7a7a7] to-[#919191] hover:brightness-110 active:scale-[0.99] transition duration-200 shadow-lg cursor-pointer"
+            className="w-full mt-2 py-3.5 px-4 rounded-xl font-montserrat font-semibold text-sm tracking-wide text-zinc-950 bg-gradient-to-r from-[#363636] via-[#a7a7a7] to-[#919191] hover:brightness-110 active:scale-[0.99] transition duration-200 shadow-lg cursor-pointer disabled:opacity-50"
           >
             {isLoading ? "Signing in..." : "Login"}
           </button>
@@ -140,8 +140,13 @@ export default function LoginForm({ onToggleToRegister }: LoginFormProps) {
           {/* Remember me & Forgot password */}
           <div className="flex items-center justify-between text-xs text-zinc-400 pt-1">
             <label className="flex items-center gap-2 cursor-pointer select-none group">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="sr-only"
+              />
               <div
-                onClick={() => setRememberMe(!rememberMe)}
                 className={`w-4 h-4 rounded flex items-center justify-center border transition-colors ${
                   rememberMe
                     ? "bg-zinc-300 border-zinc-300 text-black"
@@ -161,21 +166,9 @@ export default function LoginForm({ onToggleToRegister }: LoginFormProps) {
             </a>
           </div>
 
-          {/* Divider & Google OAuth (Disabled for MVP: Operator accounts are pre-seeded) */}
-          <div className="pt-2 text-center text-xs text-zinc-500 font-poppins">
+          {/* Operator Notice (Registration disabled) */}
+          <div className="pt-4 text-center text-xs text-zinc-500 font-poppins border-t border-white/[0.06]">
             <span>Operator access only &bull; Credentials provisioned by Admin</span>
-          </div>
-
-          {/* Bottom Switch to Register */}
-          <div className="text-center pt-2 text-xs text-zinc-400">
-            <span>Dont have account yet? </span>
-            <button
-              type="button"
-              onClick={onToggleToRegister}
-              className="font-semibold text-white hover:underline cursor-pointer ml-1"
-            >
-              Sign Up
-            </button>
           </div>
         </form>
       </div>

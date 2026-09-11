@@ -30,7 +30,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
+  // Registration route is disabled — redirect directly to /auth/login
+  if (pathname.startsWith("/auth/register")) {
+    return NextResponse.redirect(new URL("/auth/login", request.url));
+  }
+
   try {
+    const isRememberMe = request.cookies.get("remember_me")?.value === "true";
+
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
         getAll() {
@@ -39,7 +46,18 @@ export async function middleware(request: NextRequest) {
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
             request.cookies.set(name, value);
-            response.cookies.set(name, value, options);
+
+            const cookieOptions = { ...options };
+            if (!isRememberMe && cookieOptions.maxAge && cookieOptions.maxAge > 0) {
+              // User did NOT choose remember-me: strip maxAge & expires so refreshed token stays a Session Cookie
+              delete cookieOptions.maxAge;
+              delete cookieOptions.expires;
+            } else if (isRememberMe && cookieOptions.maxAge && cookieOptions.maxAge > 0) {
+              // User chose remember-me: enforce 30-day lifetime
+              cookieOptions.maxAge = 60 * 60 * 24 * 30;
+            }
+
+            response.cookies.set(name, value, cookieOptions);
           });
         },
       },
@@ -63,11 +81,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // If user is already authenticated and tries to visit login or register -> redirect to dashboard
-    if (
-      user &&
-      (pathname.startsWith("/auth/login") || pathname.startsWith("/auth/register"))
-    ) {
+    // If user is already authenticated and tries to visit login -> redirect to dashboard
+    if (user && pathname.startsWith("/auth/login")) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
 

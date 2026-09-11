@@ -92,3 +92,5 @@ matches ──< teams   (max 2 baris per match, slot a/b)
 ```
 
 5 tabel inti (dari 7 di ERD lama), lebih pas dengan alur produkmu: operator bikin/pilih **layout** (background + font + posisi), buka **match** baru pakai layout itu → dapat link OBS, lalu isi **team** langsung di situ (nama, skor, warna). Kalau mau, aku bisa buatkan versi SQL `CREATE TABLE` lengkap dengan constraint-nya.
+
+

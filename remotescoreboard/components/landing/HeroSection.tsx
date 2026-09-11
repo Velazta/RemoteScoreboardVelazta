@@ -222,7 +222,7 @@ export default function HeroSection() {
             {/* CTA Button */}
             <Link
               ref={btnRef}
-              href="/auth/register"
+              href="/dashboard"
               className="group mt-4 self-center lg:self-start opacity-0 inline-flex items-center gap-3 px-8 py-4 rounded-full
                 bg-[#1A1A1A]/80 backdrop-blur-md border border-white/20
                 font-montserrat font-medium text-[18px] tracking-widest text-white uppercase

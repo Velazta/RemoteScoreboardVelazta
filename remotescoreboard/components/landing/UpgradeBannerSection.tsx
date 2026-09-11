@@ -72,7 +72,7 @@ export default function UpgradeBannerSection() {
 
         {/* Layer 2: Text Asset (Foreground) - Made bigger and offset nicely */}
         <div className="absolute z-10 bottom-0 w-full flex justify-center pb-[4%] sm:pb-[6%] lg:pb-[8%]">
-          <Link href="/auth/register" className="cursor-pointer block w-[92%] sm:w-[85%] lg:w-[75%] max-w-[1200px]">
+          <Link href="/dashboard" className="cursor-pointer block w-[92%] sm:w-[85%] lg:w-[75%] max-w-[1200px]">
             <Image
               ref={textImageRef}
               src="/images/homepage/banner/upgrade-now.png"

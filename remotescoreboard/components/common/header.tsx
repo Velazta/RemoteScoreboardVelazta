@@ -8,7 +8,6 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function Header() {
     const headerRef = useRef<HTMLDivElement>(null);
-    const [hoveredBtn, setHoveredBtn] = useState<"signin" | "signup">("signup");
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
@@ -37,6 +36,10 @@ export default function Header() {
     }, []);
 
     const handleSignOut = async () => {
+        if (typeof window !== "undefined") {
+            localStorage.removeItem("remember_me");
+            document.cookie = "remember_me=; path=/; max-age=0";
+        }
         const supabase = createClient();
         await supabase.auth.signOut();
         window.location.href = "/";
@@ -58,15 +61,13 @@ export default function Header() {
         <header
             ref={headerRef}
             className="fixed top-0 left-0 w-full bg-transparent text-[#ffffff] z-50"
-            style={{ padding: "20px 10px 10px 20px" }}>
-
-            {/* Container */}
-            <div className="flex items-center justify-between xl:justify-center gap-4 xl:gap-[380px] w-full pr-4 md:pr-0">
-                
-                {/* Left side */}
-                <Link href="/" className="flex items-center gap-3">
-                    <div className="flex items-center gap-3">
-                        <div className="relative w-10 h-10 rounded-full overflow-hidden">
+            style={{ opacity: 0 }}
+        >
+            <div className="w-full flex items-center justify-between px-6 py-6 max-w-7xl mx-auto">
+                {/* Logo and Brand */}
+                <Link href="/" className="cursor-pointer">
+                    <div className="flex items-center gap-2">
+                        <div className="relative w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
                             <Image
                                 src="/images/auth/simo-logo.png"
                                 alt="Velazta Logo"
@@ -104,43 +105,20 @@ export default function Header() {
                             </button>
                         </div>
                     ) : (
-                        /* Tombol Auth */
-                        <div
-                            className="hidden sm:flex relative items-center p-1"
-                            onMouseLeave={() => setHoveredBtn("signup")}
-                        >
-                            <div
-                                className={`absolute top-1 bottom-1 w-[90px] rounded-full bg-[#ffffff] shadow-md transition-transform duration-300 ease-out ${
-                                    hoveredBtn === "signin" ? "translate-x-0" : "translate-x-[90px]"
-                                }`}
-                            />
-                            {/* Tombol Sign In */}
+                        /* Clean Sign In Button (Registration is disabled) */
+                        <div className="hidden sm:flex items-center">
                             <Link
                                 href="/auth/login"
-                                onMouseEnter={() => setHoveredBtn("signin")}
-                                className={`relative z-10 w-[90px] text-center py-2 font-poppins font-semibold text-sm transition-colors duration-300 ${
-                                    hoveredBtn === "signin" ? "text-[#000000]" : "text-[#ffffff]"
-                                }`}
+                                className="px-6 py-2 rounded-full bg-white text-black font-poppins font-semibold text-sm hover:bg-zinc-200 hover:scale-105 active:scale-95 transition-all shadow-md"
                             >
                                 Sign In
-                            </Link>
-
-                            {/* Tombol Sign Up */}
-                            <Link
-                                href="/auth/register"
-                                onMouseEnter={() => setHoveredBtn("signup")}
-                                className={`relative z-10 w-[90px] text-center py-2 font-poppins font-semibold text-sm transition-colors duration-300 ${
-                                    hoveredBtn === "signup" ? "text-[#000000]" : "text-[#ffffff]"
-                                }`}
-                            >
-                                Sign Up
                             </Link>
                         </div>
                     )}
 
                     {/* Tombol Hamburger Mobile */}
                     <button 
-                        className="md:hidden text-white focus:outline-none"
+                        className="md:hidden text-white focus:outline-none cursor-pointer"
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     >
                         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -166,12 +144,11 @@ export default function Header() {
                     {isAuthenticated ? (
                         <div className="flex sm:hidden gap-3 mt-2">
                             <Link href="/dashboard" className="px-6 py-2 bg-white text-black rounded-full font-poppins text-sm font-semibold">Dashboard</Link>
-                            <button onClick={handleSignOut} className="px-4 py-2 border border-white/20 text-white rounded-full font-poppins text-xs">Sign Out</button>
+                            <button onClick={handleSignOut} className="px-4 py-2 border border-white/20 text-white rounded-full font-poppins text-xs cursor-pointer">Sign Out</button>
                         </div>
                     ) : (
                         <div className="flex sm:hidden gap-4 mt-2">
-                            <Link href="/auth/login" className="px-6 py-2 border border-white rounded-full font-poppins text-sm font-semibold text-white">Sign In</Link>
-                            <Link href="/auth/register" className="px-6 py-2 bg-white text-black rounded-full font-poppins text-sm font-semibold">Sign Up</Link>
+                            <Link href="/auth/login" className="px-6 py-2 bg-white text-black rounded-full font-poppins text-sm font-semibold hover:bg-zinc-200 transition-colors">Sign In</Link>
                         </div>
                     )}
                 </div>
