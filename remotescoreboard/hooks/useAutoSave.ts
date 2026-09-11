@@ -66,8 +66,10 @@ export function useAutoSave() {
         name_font_size:        layout.teamNameSize,
         score_font_size:       layout.scoreSize,
         background_image_url:  layout.backgroundImageUrl,
-        custom_font_url:       layout.customFontUrl,
-        font_family:           layout.fontFamily,
+        name_font_family:      layout.nameFontFamily,
+        name_custom_font_url:  layout.nameCustomFontUrl,
+        score_font_family:     layout.scoreFontFamily,
+        score_custom_font_url: layout.scoreCustomFontUrl,
       });
       setSavingStatus(false);
     }, 500);

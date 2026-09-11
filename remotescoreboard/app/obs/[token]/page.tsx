@@ -65,7 +65,6 @@ export default function ObsOverlayPage({ params }: ObsOverlayPageProps) {
         className="w-screen h-screen overflow-hidden relative"
         style={{
           backgroundColor: "transparent",
-          fontFamily:       layout.fontFamily || "Montserrat",
         }}
       >
       {layout.backgroundImageUrl && (
@@ -82,6 +81,7 @@ export default function ObsOverlayPage({ params }: ObsOverlayPageProps) {
         <div
           style={{
             ...getStyle("team1_name"),
+            fontFamily: layout.nameFontFamily || "Montserrat",
             fontSize:   nameFontSize,
             color:      team1.nameColor  || "#ffffff",
             fontWeight: 700,
@@ -94,6 +94,7 @@ export default function ObsOverlayPage({ params }: ObsOverlayPageProps) {
         <div
           style={{
             ...getStyle("team1_score"),
+            fontFamily: layout.scoreFontFamily || "Montserrat",
             fontSize:   scoreFontSize,
             color:      team1.scoreColor || "#ffffff",
             fontWeight: 700,
@@ -106,6 +107,7 @@ export default function ObsOverlayPage({ params }: ObsOverlayPageProps) {
         <div
           style={{
             ...getStyle("team2_name"),
+            fontFamily: layout.nameFontFamily || "Montserrat",
             fontSize:   nameFontSize,
             color:      team2.nameColor  || "#ffffff",
             fontWeight: 700,
@@ -118,6 +120,7 @@ export default function ObsOverlayPage({ params }: ObsOverlayPageProps) {
         <div
           style={{
             ...getStyle("team2_score"),
+            fontFamily: layout.scoreFontFamily || "Montserrat",
             fontSize:   scoreFontSize,
             color:      team2.scoreColor || "#ffffff",
             fontWeight: 700,

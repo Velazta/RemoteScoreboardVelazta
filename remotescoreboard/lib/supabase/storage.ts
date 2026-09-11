@@ -58,33 +58,50 @@ export async function uploadBackgroundImage(file: File, layoutId: string): Promi
 /**
  * Inject dynamic @font-face ke document.head browser
  */
-export function injectFontFace(fontFamily: string, fontUrl: string) {
-  if (typeof window === "undefined" || !fontUrl) return;
+export function injectFontFace(fontFamily: string, fontUrl: string | null) {
+  if (typeof window === "undefined" || !fontFamily) return;
 
-  const fontStyleId = `custom-font-${fontFamily}`;
-  const existingStyle = document.getElementById(fontStyleId);
+  const fontStyleId = `font-${fontFamily.replace(/\s+/g, '-')}`;
+  const existingElement = document.getElementById(fontStyleId);
 
-  if (existingStyle) {
-    existingStyle.textContent = `
+  if (fontUrl) {
+    // Custom Uploaded Font
+    const styleContent = `
       @font-face {
         font-family: '${fontFamily}';
         src: url('${fontUrl}') format('truetype'), url('${fontUrl}') format('woff2');
         font-display: swap;
       }
     `;
-    return;
-  }
 
-  const style = document.createElement("style");
-  style.id = fontStyleId;
-  style.textContent = `
-    @font-face {
-      font-family: '${fontFamily}';
-      src: url('${fontUrl}') format('truetype'), url('${fontUrl}') format('woff2');
-      font-display: swap;
+    if (existingElement && existingElement.tagName === 'STYLE') {
+      existingElement.textContent = styleContent;
+      return;
+    } else if (existingElement) {
+      existingElement.remove();
     }
-  `;
-  document.head.appendChild(style);
+
+    const style = document.createElement("style");
+    style.id = fontStyleId;
+    style.textContent = styleContent;
+    document.head.appendChild(style);
+  } else {
+    // Google Font
+    const googleFontUrl = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, '+')}&display=swap`;
+    
+    if (existingElement && existingElement.tagName === 'LINK') {
+      (existingElement as HTMLLinkElement).href = googleFontUrl;
+      return;
+    } else if (existingElement) {
+      existingElement.remove();
+    }
+
+    const link = document.createElement("link");
+    link.id = fontStyleId;
+    link.rel = "stylesheet";
+    link.href = googleFontUrl;
+    document.head.appendChild(link);
+  }
 }
 
 /**
@@ -128,21 +145,7 @@ export async function uploadCustomFont(
     // 3. Inject @font-face ke DOM browser secara langsung
     injectFontFace(fontFamily, publicUrl);
 
-    // 4. Update database tabel layouts
-    if (layoutId) {
-      const { error: updateError } = await supabase
-        .from("layouts")
-        .update({
-          custom_font_url: publicUrl,
-          font_family: fontFamily,
-        })
-        .eq("id", layoutId);
-
-      if (updateError) {
-        console.error("Gagal mengupdate database font layout:", updateError.message);
-      }
-    }
-
+    // Database update is now handled entirely by Zustand auto-save
     return { publicUrl, fontFamily };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);

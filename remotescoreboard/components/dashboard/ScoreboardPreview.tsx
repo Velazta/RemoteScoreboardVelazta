@@ -137,10 +137,13 @@ export default function ScoreboardPreview() {
 
   // Inject font whenever it changes
   useEffect(() => {
-    if (layout.customFontUrl && layout.fontFamily) {
-      injectFontFace(layout.fontFamily, layout.customFontUrl);
+    if (layout.nameCustomFontUrl && layout.nameFontFamily) {
+      injectFontFace(layout.nameFontFamily, layout.nameCustomFontUrl);
     }
-  }, [layout.customFontUrl, layout.fontFamily]);
+    if (layout.scoreCustomFontUrl && layout.scoreFontFamily) {
+      injectFontFace(layout.scoreFontFamily, layout.scoreCustomFontUrl);
+    }
+  }, [layout.nameCustomFontUrl, layout.nameFontFamily, layout.scoreCustomFontUrl, layout.scoreFontFamily]);
 
   // Keep scale in sync with container width via ResizeObserver
   useEffect(() => {
@@ -231,7 +234,9 @@ export default function ScoreboardPreview() {
   // against the outer (small) container and produce wrong sizes.
   const nameFontSize  = `${layout.teamNameSize}px`;
   const scoreFontSize = `${layout.scoreSize}px`;
-  const fontFamily    = layout.fontFamily || "Montserrat";
+
+  const getFontFamily = (key: ElementKey) =>
+    key === "team1_score" || key === "team2_score" ? (layout.scoreFontFamily || "Montserrat") : (layout.nameFontFamily || "Montserrat");
 
   const getContent = (key: ElementKey) => {
     if (key === "team1_name")  return team1.name  || "TEAM 1";
@@ -333,7 +338,7 @@ export default function ScoreboardPreview() {
               onPointerDown={handlePointerDown}
               fontSize={getFontSize(key)}
               color={getColor(key)}
-              fontFamily={fontFamily}
+              fontFamily={getFontFamily(key)}
               elements={elements}
             >
               {getContent(key)}

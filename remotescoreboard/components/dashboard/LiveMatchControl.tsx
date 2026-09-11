@@ -2,12 +2,15 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import LayoutCustomization from "./LayoutCustomization";
+import ResetConfirmationModal from "./ResetConfirmationModal";
 import { useScoreboardStore } from "@/store/useScoreboardStore";
 import gsap from "gsap";
 
 export default function LiveMatchControl() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<"live" | "layout">("live");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalStep, setModalStep] = useState<"caution" | "success">("caution");
 
   const {
     team1,
@@ -18,6 +21,7 @@ export default function LiveMatchControl() {
     setTeam2Score,
     swapTeams,
     resetScores,
+    resetToDefault,
   } = useScoreboardStore();
 
   useEffect(() => {
@@ -29,6 +33,20 @@ export default function LiveMatchControl() {
       );
     }
   }, []);
+
+  const handleOpenResetModal = () => {
+    setModalStep("caution");
+    setIsModalOpen(true);
+  };
+
+  const handleConfirmReset = () => {
+    resetToDefault();
+    setModalStep("success");
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
 
   return (
     <div ref={containerRef} className="flex flex-col w-full h-full gap-6">
@@ -183,6 +201,22 @@ export default function LiveMatchControl() {
       ) : (
         <LayoutCustomization />
       )}
+
+      {/* Reset ke Default Button (matching reference design) */}
+      <button
+        onClick={handleOpenResetModal}
+        className="w-full py-4 rounded-[10px] bg-[#222222] hover:bg-[#282828] border border-red-600/90 text-red-500 font-poppins font-normal text-sm sm:text-base tracking-wide transition-all duration-150 cursor-pointer text-center shadow-lg active:scale-[0.99]"
+      >
+        Reset ke Default
+      </button>
+
+      {/* Confirmation & Success Pop-up Modal */}
+      <ResetConfirmationModal
+        isOpen={isModalOpen}
+        step={modalStep}
+        onClose={handleCloseModal}
+        onConfirm={handleConfirmReset}
+      />
     </div>
   );
 }

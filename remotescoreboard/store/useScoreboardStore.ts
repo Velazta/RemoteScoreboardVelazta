@@ -22,8 +22,10 @@ export interface LayoutConfigState {
   id?: string;
   name: string;
   backgroundImageUrl: string | null;
-  customFontUrl: string | null;
-  fontFamily: string;
+  nameFontFamily: string;
+  nameCustomFontUrl: string | null;
+  scoreFontFamily: string;
+  scoreCustomFontUrl: string | null;
   teamNameSize: number;
   scoreSize: number;
 }
@@ -53,8 +55,10 @@ export interface ScoreboardStore {
   setTeam2Score: (score: number) => void;
   swapTeams: () => void;
   resetScores: () => void;
+  resetToDefault: () => void;
   setBackgroundImageUrl: (url: string | null) => void;
-  setCustomFontUrl: (url: string | null, fontFamily?: string) => void;
+  setNameFont: (fontFamily: string, customFontUrl: string | null) => void;
+  setScoreFont: (fontFamily: string, customFontUrl: string | null) => void;
   setTeamNameSize: (size: number) => void;
   setScoreSize: (size: number) => void;
   setTeamColor: (teamSlot: "team1" | "team2", type: "name" | "score", color: string) => void;
@@ -89,8 +93,10 @@ export const useScoreboardStore = create<ScoreboardStore>((set) => ({
   layout: {
     name: "Default Esports Layout",
     backgroundImageUrl: null,
-    customFontUrl: null,
-    fontFamily: "Montserrat",
+    nameFontFamily: "Montserrat",
+    nameCustomFontUrl: null,
+    scoreFontFamily: "Bebas Neue",
+    scoreCustomFontUrl: null,
     teamNameSize: 90,
     scoreSize: 90,
   },
@@ -111,8 +117,43 @@ export const useScoreboardStore = create<ScoreboardStore>((set) => ({
       team2: { ...state.team1, id: state.team2.id },
     })),
   resetScores: () => set((state) => ({ team1: { ...state.team1, score: 0 }, team2: { ...state.team2, score: 0 } })),
+  resetToDefault: () =>
+    set((state) => ({
+      team1: {
+        ...state.team1,
+        name: "TEAM 1",
+        score: 0,
+        nameColor: "#ffffff",
+        scoreColor: "#ffffff",
+      },
+      team2: {
+        ...state.team2,
+        name: "TEAM 2",
+        score: 0,
+        nameColor: "#ffffff",
+        scoreColor: "#ffffff",
+      },
+      layout: {
+        ...state.layout,
+        name: "Default Esports Layout",
+        backgroundImageUrl: null,
+        nameFontFamily: "Montserrat",
+        nameCustomFontUrl: null,
+        scoreFontFamily: "Bebas Neue",
+        scoreCustomFontUrl: null,
+        teamNameSize: 90,
+        scoreSize: 90,
+      },
+      elements: {
+        team1_name: { ...initialElements.team1_name, id: state.elements.team1_name.id },
+        team1_score: { ...initialElements.team1_score, id: state.elements.team1_score.id },
+        team2_name: { ...initialElements.team2_name, id: state.elements.team2_name.id },
+        team2_score: { ...initialElements.team2_score, id: state.elements.team2_score.id },
+      },
+    })),
   setBackgroundImageUrl: (backgroundImageUrl) => set((state) => ({ layout: { ...state.layout, backgroundImageUrl } })),
-  setCustomFontUrl: (customFontUrl, fontFamily = "CustomUploadedFont") => set((state) => ({ layout: { ...state.layout, customFontUrl, fontFamily } })),
+  setNameFont: (fontFamily, customFontUrl) => set((state) => ({ layout: { ...state.layout, nameFontFamily: fontFamily, nameCustomFontUrl: customFontUrl } })),
+  setScoreFont: (fontFamily, customFontUrl) => set((state) => ({ layout: { ...state.layout, scoreFontFamily: fontFamily, scoreCustomFontUrl: customFontUrl } })),
   setTeamNameSize: (teamNameSize) => set((state) => ({ layout: { ...state.layout, teamNameSize } })),
   setScoreSize: (scoreSize) => set((state) => ({ layout: { ...state.layout, scoreSize } })),
   setTeamColor: (teamSlot, type, color) =>

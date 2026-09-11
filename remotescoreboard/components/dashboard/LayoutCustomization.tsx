@@ -12,14 +12,11 @@ import {
   Loader2,
   Check,
 } from "lucide-react";
+import { FontPicker } from "./FontPicker";
 import { useScoreboardStore } from "@/store/useScoreboardStore";
-import { uploadCustomFont } from "@/lib/supabase/storage";
 import { ElementKey, TextAlignment } from "@/types/database";
 
 export default function LayoutCustomization() {
-  const fontInputRef = useRef<HTMLInputElement>(null);
-  const [isUploadingFont, setIsUploadingFont] = useState(false);
-
   const {
     layout,
     team1,
@@ -28,24 +25,10 @@ export default function LayoutCustomization() {
     setTeamNameSize,
     setScoreSize,
     setTeamColor,
-    setCustomFontUrl,
+    setNameFont,
+    setScoreFont,
     setElementPosition,
   } = useScoreboardStore();
-
-  const handleFontUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsUploadingFont(true);
-    const result = await uploadCustomFont(file, layout.id || "");
-    setIsUploadingFont(false);
-
-    if (result) {
-      setCustomFontUrl(result.publicUrl, result.fontFamily);
-    } else {
-      alert("Gagal meng-upload font ke Supabase Storage.");
-    }
-  };
 
   const handleAlignChange = (key: ElementKey, align: TextAlignment) => {
     setElementPosition(key, { align });
@@ -62,15 +45,6 @@ export default function LayoutCustomization() {
 
   return (
     <div className="flex flex-col w-full gap-6">
-      {/* Hidden Font Input */}
-      <input
-        type="file"
-        ref={fontInputRef}
-        onChange={handleFontUpload}
-        accept=".ttf,.woff2,.woff,.otf"
-        className="hidden"
-      />
-
       {/* Font Settings Card */}
       <div className="flex flex-col w-full bg-[#1A1A1A]/60 backdrop-blur-xl border border-white/10 rounded-[12px] p-6 shadow-lg">
         <div className="flex items-center gap-3 mb-6">
@@ -81,28 +55,22 @@ export default function LayoutCustomization() {
         </div>
 
         <div className="space-y-6 font-montserrat">
-          {/* Upload Font Button */}
-          <button
-            onClick={() => fontInputRef.current?.click()}
-            disabled={isUploadingFont}
-            className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full rounded-[8px] bg-[#242424] border border-white/10 px-4 py-3 hover:bg-[#2a2a2a] transition-colors cursor-pointer group gap-2 sm:gap-0 disabled:opacity-50"
-          >
-            <div className="flex items-center gap-3 w-full sm:w-auto overflow-hidden">
-              {isUploadingFont ? (
-                <Loader2 className="w-5 h-5 text-purple-400 animate-spin flex-shrink-0" />
-              ) : (
-                <UploadCloud className="w-5 h-5 text-zinc-400 group-hover:text-white transition-colors flex-shrink-0" />
-              )}
-              <span className="text-sm text-zinc-300 truncate">
-                {layout.customFontUrl
-                  ? `Custom Font Active: ${layout.fontFamily}`
-                  : "Upload custom font (.ttf, .woff2)"}
-              </span>
-            </div>
-            <span className="text-sm text-zinc-500 group-hover:text-zinc-400">
-              {layout.customFontUrl ? "change" : "browse"}
-            </span>
-          </button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FontPicker
+              label="Team Name Font"
+              valueFontFamily={layout.nameFontFamily}
+              valueCustomUrl={layout.nameCustomFontUrl}
+              onChange={setNameFont}
+              layoutId={layout.id || ""}
+            />
+            <FontPicker
+              label="Score Font"
+              valueFontFamily={layout.scoreFontFamily}
+              valueCustomUrl={layout.scoreCustomFontUrl}
+              onChange={setScoreFont}
+              layoutId={layout.id || ""}
+            />
+          </div>
 
           {/* Sliders */}
           <div className="space-y-5">

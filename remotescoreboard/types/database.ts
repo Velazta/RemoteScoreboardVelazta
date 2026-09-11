@@ -16,8 +16,10 @@ export interface DbLayout {
   user_id?: string;
   name: string;
   background_image_url: string | null;
-  custom_font_url: string | null;
-  font_family: string | null;
+  name_font_family: string | null;
+  name_custom_font_url: string | null;
+  score_font_family: string | null;
+  score_custom_font_url: string | null;
   name_font_size: number | null;
   score_font_size: number | null;
   is_default?: boolean;

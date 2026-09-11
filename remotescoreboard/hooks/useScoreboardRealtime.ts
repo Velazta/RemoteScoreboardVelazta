@@ -24,16 +24,21 @@ export function useScoreboardRealtime(obsToken: string) {
   const hydrateFromDatabase = useScoreboardStore(
     (state) => state.hydrateFromDatabase
   );
-  const customFontUrl  = useScoreboardStore((s) => s.layout.customFontUrl);
-  const fontFamily     = useScoreboardStore((s) => s.layout.fontFamily);
-  const isMountedRef   = useRef(true);
+  const nameFontFamily     = useScoreboardStore((s) => s.layout.nameFontFamily);
+  const nameCustomFontUrl  = useScoreboardStore((s) => s.layout.nameCustomFontUrl);
+  const scoreFontFamily    = useScoreboardStore((s) => s.layout.scoreFontFamily);
+  const scoreCustomFontUrl = useScoreboardStore((s) => s.layout.scoreCustomFontUrl);
+  const isMountedRef       = useRef(true);
 
   // Inject font whenever the URL changes
   useEffect(() => {
-    if (customFontUrl && fontFamily) {
-      injectFontFace(fontFamily, customFontUrl);
+    if (nameCustomFontUrl && nameFontFamily) {
+      injectFontFace(nameFontFamily, nameCustomFontUrl);
     }
-  }, [customFontUrl, fontFamily]);
+    if (scoreCustomFontUrl && scoreFontFamily) {
+      injectFontFace(scoreFontFamily, scoreCustomFontUrl);
+    }
+  }, [nameCustomFontUrl, nameFontFamily, scoreCustomFontUrl, scoreFontFamily]);
 
   useEffect(() => {
     isMountedRef.current = true;

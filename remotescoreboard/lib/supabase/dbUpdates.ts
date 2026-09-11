@@ -27,8 +27,10 @@ export async function updateLayout(
     name_font_size: number;
     score_font_size: number;
     background_image_url: string | null;
-    custom_font_url: string | null;
-    font_family: string | null;
+    name_font_family: string | null;
+    name_custom_font_url: string | null;
+    score_font_family: string | null;
+    score_custom_font_url: string | null;
   }
 ) {
   const { error } = await supabase
