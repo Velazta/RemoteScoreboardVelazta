@@ -243,27 +243,30 @@ export default function ScoreboardPreview() {
     key === "team1_score" || key === "team2_score" ? scoreFontSize : nameFontSize;
 
   return (
-    <div className="flex flex-col w-full rounded-[12px] border border-white/10 bg-[#1A1A1A]/80 backdrop-blur-xl p-6 gap-5 shadow-lg">
-      {/* Header */}
-      <div className="flex items-center justify-between w-full">
-        <div className="flex items-center gap-3 text-white">
-          <ImageIcon className="w-6 h-6 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
-          <h2 className="font-montserrat font-medium text-lg tracking-widest uppercase drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">
+    <div className="flex flex-col w-full rounded-[12px] border border-white/10 bg-[#1A1A1A]/80 backdrop-blur-xl p-4 sm:p-6 gap-4 sm:gap-5 shadow-lg overflow-hidden">
+      {/* Header — Title on left, actions stacked vertically on right in mobile, row in desktop */}
+      <div className="flex items-center justify-between gap-3 w-full">
+        {/* Left: Icon & Title */}
+        <div className="flex items-center gap-2.5 sm:gap-3 text-white min-w-0">
+          <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+          <h2 className="font-montserrat font-medium text-sm sm:text-base md:text-lg tracking-wider sm:tracking-widest uppercase drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] leading-tight">
             Scoreboard Preview
           </h2>
         </div>
-        <div className="flex items-center gap-3">
+
+        {/* Right: Actions stacked column on mobile, row on tablet/desktop */}
+        <div className="flex flex-col items-end gap-1.5 shrink-0 ml-2">
           {layout.backgroundImageUrl && (
             <button
               onClick={() => setBackgroundImageUrl(null)}
-              className="flex items-center gap-1.5 px-3 py-1 text-[11px] tracking-wider text-red-400 hover:text-red-300 border border-red-500/20 rounded-full bg-red-500/10 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1 text-[11px] tracking-wider text-red-400 hover:text-red-300 border border-red-500/20 rounded-full bg-red-500/10 transition-colors cursor-pointer shrink-0 whitespace-nowrap"
               title="Hapus Background"
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span>Remove BG</span>
             </button>
           )}
-          <div className="px-3 py-1 text-[12px] tracking-widest font-mono text-zinc-400 border border-white/10 rounded-full bg-white/5 uppercase">
+          <div className="px-3 py-1 text-[11px] sm:text-[12px] tracking-wider sm:tracking-widest font-mono text-zinc-400 border border-white/10 rounded-full bg-white/5 uppercase shrink-0 whitespace-nowrap">
             1920×1080
           </div>
         </div>
