@@ -1,8 +1,10 @@
 "use client";
 
-import React, { use } from "react";
+import React, { use, useEffect } from "react";
 import { useScoreboardStore } from "@/store/useScoreboardStore";
 import { useScoreboardRealtime } from "@/hooks/useScoreboardRealtime";
+import { injectFontFace } from "@/lib/supabase/storage";
+import AnimatedScore from "@/components/dashboard/AnimatedScore";
 
 // ---------------------------------------------------------------------------
 // OBS Overlay Page — /obs/[token]
@@ -100,7 +102,7 @@ export default function ObsOverlayPage({ params }: ObsOverlayPageProps) {
             fontWeight: 700,
           }}
         >
-          {team1.score}
+          <AnimatedScore value={team1.score} align={elements.team1_score.align as "left" | "center" | "right"} />
         </div>
 
         {/* Team 2 Name */}
@@ -126,7 +128,7 @@ export default function ObsOverlayPage({ params }: ObsOverlayPageProps) {
             fontWeight: 700,
           }}
         >
-          {team2.score}
+          <AnimatedScore value={team2.score} align={elements.team2_score.align as "left" | "center" | "right"} />
         </div>
       </div>
     </main>

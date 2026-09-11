@@ -5,6 +5,7 @@ import { Image as ImageIcon, UploadCloud, Loader2, Trash2, GripVertical } from "
 import { useScoreboardStore } from "@/store/useScoreboardStore";
 import { uploadBackgroundImage, injectFontFace } from "@/lib/supabase/storage";
 import type { ElementKey } from "@/types/database";
+import AnimatedScore from "./AnimatedScore";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -241,8 +242,8 @@ export default function ScoreboardPreview() {
   const getContent = (key: ElementKey) => {
     if (key === "team1_name")  return team1.name  || "TEAM 1";
     if (key === "team2_name")  return team2.name  || "TEAM 2";
-    if (key === "team1_score") return String(team1.score);
-    return String(team2.score);
+    if (key === "team1_score") return <AnimatedScore value={team1.score} align={elements[key].align as "left" | "center" | "right"} />;
+    return <AnimatedScore value={team2.score} align={elements[key].align as "left" | "center" | "right"} />;
   };
 
   const getColor = (key: ElementKey): string => {
