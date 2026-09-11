@@ -244,10 +244,10 @@ export default function ScoreboardPreview() {
 
   return (
     <div className="flex flex-col w-full rounded-[12px] border border-white/10 bg-[#1A1A1A]/80 backdrop-blur-xl p-4 sm:p-6 gap-4 sm:gap-5 shadow-lg overflow-hidden">
-      {/* Header — Title on left, actions stacked vertically on right in mobile, row in desktop */}
-      <div className="flex items-center justify-between gap-3 w-full">
+      {/* Header — Title on left, actions stacked vertically on right */}
+      <div className="flex items-start justify-between gap-3 w-full">
         {/* Left: Icon & Title */}
-        <div className="flex items-center gap-2.5 sm:gap-3 text-white min-w-0">
+        <div className="flex items-start gap-2.5 sm:gap-3 text-white min-w-0 pt-0.5">
           <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
           <h2 className="font-montserrat font-medium text-sm sm:text-base md:text-lg tracking-wider sm:tracking-widest uppercase drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] leading-tight">
             Scoreboard Preview
