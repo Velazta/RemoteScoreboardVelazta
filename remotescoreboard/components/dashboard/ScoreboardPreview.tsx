@@ -121,6 +121,7 @@ function DraggableElement({
 export default function ScoreboardPreview() {
   const fileInputRef  = useRef<HTMLInputElement>(null);
   const containerRef  = useRef<HTMLDivElement>(null);
+  const dragOffsetRef = useRef({ x: 0, y: 0 });
   const [isUploading, setIsUploading] = useState(false);
   const [scale, setScale]             = useState(1);
   const [draggingKey, setDraggingKey] = useState<ElementKey | null>(null);
@@ -161,8 +162,10 @@ export default function ScoreboardPreview() {
     const handleMove = (e: PointerEvent) => {
       const rect = containerRef.current?.getBoundingClientRect();
       if (!rect) return;
-      const x = clamp(Math.round((e.clientX - rect.left) / scale), CANVAS_W);
-      const y = clamp(Math.round((e.clientY - rect.top)  / scale), CANVAS_H);
+      const rawX = (e.clientX - rect.left) / scale;
+      const rawY = (e.clientY - rect.top)  / scale;
+      const x = clamp(Math.round(rawX - dragOffsetRef.current.x), CANVAS_W);
+      const y = clamp(Math.round(rawY - dragOffsetRef.current.y), CANVAS_H);
       setElementPosition(draggingKey, { x, y });
     };
 
@@ -186,9 +189,14 @@ export default function ScoreboardPreview() {
     (e: React.PointerEvent<HTMLDivElement>, key: ElementKey) => {
       e.preventDefault();
       e.stopPropagation();
+      const rect = e.currentTarget.getBoundingClientRect();
+      dragOffsetRef.current = {
+        x: (e.clientX - rect.left) / scale,
+        y: (e.clientY - rect.top) / scale,
+      };
       setDraggingKey(key);
     },
-    []
+    [scale]
   );
 
   // ---- file upload helpers ----
