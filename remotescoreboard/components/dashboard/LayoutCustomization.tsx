@@ -9,6 +9,7 @@ import {
   AlignRight,
   AlignJustify,
   Lock,
+  Unlock,
   Loader2,
   Check,
 } from "lucide-react";
@@ -41,6 +42,10 @@ export default function LayoutCustomization() {
   ) => {
     const num = Number(val) || 0;
     setElementPosition(key, { [field]: num });
+  };
+
+  const handleToggleLock = (key: ElementKey) => {
+    setElementPosition(key, { isLocked: !elements[key]?.isLocked });
   };
 
   return (
@@ -173,6 +178,7 @@ export default function LayoutCustomization() {
           {(["team1_name", "team1_score", "team2_name", "team2_score"] as ElementKey[]).map(
             (key) => {
               const el = elements[key];
+              const isLocked = !!el.isLocked;
               const isTeam1 = key.startsWith("team1");
               const accentColor = isTeam1 ? "#a855f7" : "#eab308";
               const labelText = key.replace("_", " ").toUpperCase();
@@ -182,10 +188,15 @@ export default function LayoutCustomization() {
                   key={key}
                   className="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-4"
                 >
-                  <div className="w-36">
+                  <div className="w-36 flex items-center gap-2">
                     <span className="text-[11px] font-medium text-zinc-300 uppercase tracking-wider">
                       {labelText}
                     </span>
+                    {isLocked && (
+                      <span className="text-[10px] text-amber-400 font-semibold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">
+                        LOCKED
+                      </span>
+                    )}
                   </div>
                   <div className="flex flex-wrap items-center gap-3 flex-1 sm:ml-4">
                     <div className="flex items-center gap-2">
@@ -195,8 +206,9 @@ export default function LayoutCustomization() {
                       <input
                         type="number"
                         value={el.x}
+                        disabled={isLocked}
                         onChange={(e) => handlePosChange(key, "x", e.target.value)}
-                        className="w-16 sm:w-20 rounded-[6px] bg-[#242424] border border-white/10 px-2 py-1.5 text-center text-sm text-white focus:outline-none focus:border-white/30 min-w-0"
+                        className="w-16 sm:w-20 rounded-[6px] bg-[#242424] border border-white/10 px-2 py-1.5 text-center text-sm text-white focus:outline-none focus:border-white/30 min-w-0 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
                       />
                     </div>
                     <div className="flex items-center gap-2">
@@ -206,8 +218,9 @@ export default function LayoutCustomization() {
                       <input
                         type="number"
                         value={el.y}
+                        disabled={isLocked}
                         onChange={(e) => handlePosChange(key, "y", e.target.value)}
-                        className="w-16 sm:w-20 rounded-[6px] bg-[#242424] border border-white/10 px-2 py-1.5 text-center text-sm text-white focus:outline-none focus:border-white/30 min-w-0"
+                        className="w-16 sm:w-20 rounded-[6px] bg-[#242424] border border-white/10 px-2 py-1.5 text-center text-sm text-white focus:outline-none focus:border-white/30 min-w-0 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
                       />
                     </div>
                     <div className="flex items-center gap-2">
@@ -217,8 +230,9 @@ export default function LayoutCustomization() {
                       <input
                         type="number"
                         value={el.width}
+                        disabled={isLocked}
                         onChange={(e) => handlePosChange(key, "width", e.target.value)}
-                        className="w-16 sm:w-20 rounded-[6px] bg-[#242424] border border-white/10 px-2 py-1.5 text-center text-sm text-white focus:outline-none focus:border-white/30 min-w-0"
+                        className="w-16 sm:w-20 rounded-[6px] bg-[#242424] border border-white/10 px-2 py-1.5 text-center text-sm text-white focus:outline-none focus:border-white/30 min-w-0 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
                       />
                     </div>
                   </div>
@@ -239,8 +253,12 @@ export default function LayoutCustomization() {
                           return (
                             <button
                               key={alignType}
+                              type="button"
+                              disabled={isLocked}
                               onClick={() => handleAlignChange(key, alignType)}
                               className={`p-1.5 rounded-[4px] transition-colors ${
+                                isLocked ? "opacity-40 cursor-not-allowed" : ""
+                              } ${
                                 isActive
                                   ? isTeam1
                                     ? "bg-[#a855f7] text-white"
@@ -254,7 +272,22 @@ export default function LayoutCustomization() {
                         }
                       )}
                     </div>
-                    <Lock className="w-4 h-4 text-zinc-600" />
+                    <button
+                      type="button"
+                      onClick={() => handleToggleLock(key)}
+                      title={isLocked ? "Unlock position" : "Lock position"}
+                      className={`p-2 rounded-[6px] border transition-all cursor-pointer ${
+                        isLocked
+                          ? "bg-amber-500/20 text-amber-400 border-amber-500/40 hover:bg-amber-500/30"
+                          : "bg-[#242424] text-zinc-400 border-white/10 hover:text-white hover:border-white/25"
+                      }`}
+                    >
+                      {isLocked ? (
+                        <Lock className="w-4 h-4" />
+                      ) : (
+                        <Unlock className="w-4 h-4" />
+                      )}
+                    </button>
                   </div>
                 </div>
               );

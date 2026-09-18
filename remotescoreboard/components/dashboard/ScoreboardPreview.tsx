@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect, useCallback } from "react";
-import { Image as ImageIcon, UploadCloud, Loader2, Trash2, GripVertical } from "lucide-react";
+import { Image as ImageIcon, UploadCloud, Loader2, Trash2, GripVertical, Lock } from "lucide-react";
 import { useScoreboardStore } from "@/store/useScoreboardStore";
 import { uploadBackgroundImage, injectFontFace } from "@/lib/supabase/storage";
 import type { ElementKey } from "@/types/database";
@@ -34,11 +34,13 @@ function CoordBadge({
   y,
   accent,
   dragging,
+  isLocked,
 }: {
   x: number;
   y: number;
   accent: string;
   dragging: boolean;
+  isLocked?: boolean;
 }) {
   return (
     <div
@@ -48,16 +50,20 @@ function CoordBadge({
         left: `${(x / CANVAS_W) * 100}%`,
         marginTop: "-4px",
         backgroundColor: "rgba(9,9,11,0.92)",
-        border: `1px solid ${accent}${dragging ? "" : "77"}`,
-        color: accent,
+        border: `1px solid ${isLocked ? "#f59e0b99" : `${accent}${dragging ? "" : "77"}`}`,
+        color: isLocked ? "#fbbf24" : accent,
         opacity: dragging ? 1 : 0.75,
         fontFamily: "monospace",
       }}
     >
-      <span
-        className="h-1.5 w-1.5 rounded-full shrink-0"
-        style={{ backgroundColor: accent }}
-      />
+      {isLocked ? (
+        <Lock className="w-2.5 h-2.5 text-amber-400 shrink-0" />
+      ) : (
+        <span
+          className="h-1.5 w-1.5 rounded-full shrink-0"
+          style={{ backgroundColor: accent }}
+        />
+      )}
       {Math.round(x)}, {Math.round(y)}
     </div>
   );
@@ -88,6 +94,8 @@ function DraggableElement({
   elements: ReturnType<typeof useScoreboardStore.getState>["elements"];
 }) {
   const el = elements[posKey];
+  const isLocked = !!el.isLocked;
+
   return (
     <div
       onPointerDown={(e) => onPointerDown(e, posKey)}
@@ -102,8 +110,10 @@ function DraggableElement({
         color,
         fontWeight: 700,
         textShadow: "0 2px 12px rgba(0,0,0,0.65)",
-        cursor: isDragging ? "grabbing" : "grab",
-        outline: isDragging
+        cursor: isLocked ? "not-allowed" : isDragging ? "grabbing" : "grab",
+        outline: isLocked
+          ? "1px dashed rgba(245,158,11,0.35)"
+          : isDragging
           ? `2px dashed ${accent}`
           : `1px dashed ${accent}55`,
         outlineOffset: 5,
@@ -112,6 +122,14 @@ function DraggableElement({
       }}
     >
       {children}
+      {isLocked && (
+        <span
+          className="absolute -top-3 -right-3 p-0.5 rounded bg-black/80 border border-amber-500/40 text-amber-400 pointer-events-none shadow-sm flex items-center justify-center"
+          title="Element is locked"
+        >
+          <Lock className="w-2.5 h-2.5" />
+        </span>
+      )}
     </div>
   );
 }
@@ -191,6 +209,7 @@ export default function ScoreboardPreview() {
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>, key: ElementKey) => {
+      if (elements[key]?.isLocked) return;
       e.preventDefault();
       e.stopPropagation();
       const rect = e.currentTarget.getBoundingClientRect();
@@ -200,7 +219,7 @@ export default function ScoreboardPreview() {
       };
       setDraggingKey(key);
     },
-    [scale]
+    [scale, elements]
   );
 
   // ---- file upload helpers ----
@@ -355,6 +374,7 @@ export default function ScoreboardPreview() {
             y={elements[key].y}
             accent={accent}
             dragging={draggingKey === key}
+            isLocked={elements[key].isLocked}
           />
         ))}
       </div>
