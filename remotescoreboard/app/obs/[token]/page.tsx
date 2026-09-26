@@ -5,6 +5,7 @@ import { useScoreboardStore } from "@/store/useScoreboardStore";
 import { useScoreboardRealtime } from "@/hooks/useScoreboardRealtime";
 import { injectFontFace } from "@/lib/supabase/storage";
 import AnimatedScore from "@/components/dashboard/AnimatedScore";
+import AnimatedTeamName from "@/components/dashboard/AnimatedTeamName";
 
 // ---------------------------------------------------------------------------
 // OBS Overlay Page — /obs/[token]
@@ -28,7 +29,7 @@ export default function ObsOverlayPage({ params }: ObsOverlayPageProps) {
 
   useScoreboardRealtime(obsToken);
 
-  const { layout, team1, team2, elements } = useScoreboardStore();
+  const { layout, team1, team2, elements, isElementsVisible } = useScoreboardStore();
 
   // Convert absolute 1920×1080 coordinates to viewport-percentage.
   // NO vertical centering transform — anchor is the TOP-LEFT of the text box,
@@ -78,7 +79,13 @@ export default function ObsOverlayPage({ params }: ObsOverlayPageProps) {
         />
       )}
 
-      <div className="absolute inset-0 w-full h-full z-10">
+      <div
+        className="absolute inset-0 w-full h-full z-10 transition-opacity duration-300"
+        style={{
+          opacity: isElementsVisible ? 1 : 0,
+          pointerEvents: "none",
+        }}
+      >
         {/* Team 1 Name */}
         <div
           style={{
@@ -89,7 +96,7 @@ export default function ObsOverlayPage({ params }: ObsOverlayPageProps) {
             fontWeight: 700,
           }}
         >
-          {team1.name}
+          <AnimatedTeamName value={team1.name} align={elements.team1_name.align as "left" | "center" | "right"} />
         </div>
 
         {/* Team 1 Score */}
@@ -115,7 +122,7 @@ export default function ObsOverlayPage({ params }: ObsOverlayPageProps) {
             fontWeight: 700,
           }}
         >
-          {team2.name}
+          <AnimatedTeamName value={team2.name} align={elements.team2_name.align as "left" | "center" | "right"} />
         </div>
 
         {/* Team 2 Score */}

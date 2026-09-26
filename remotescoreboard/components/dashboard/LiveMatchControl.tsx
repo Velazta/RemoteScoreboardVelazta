@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from "react";
 import LayoutCustomization from "./LayoutCustomization";
 import ResetConfirmationModal from "./ResetConfirmationModal";
 import { useScoreboardStore } from "@/store/useScoreboardStore";
+import { createClient } from "@/lib/supabase/client";
+import { Eye, EyeOff } from "lucide-react";
 import gsap from "gsap";
 
 export default function LiveMatchControl() {
@@ -15,6 +17,9 @@ export default function LiveMatchControl() {
   const {
     team1,
     team2,
+    obsToken,
+    isElementsVisible,
+    toggleElementsVisible,
     setTeam1Name,
     setTeam1Score,
     setTeam2Name,
@@ -23,6 +28,8 @@ export default function LiveMatchControl() {
     resetScores,
     resetToDefault,
   } = useScoreboardStore();
+
+  const channelRef = useRef<ReturnType<ReturnType<typeof createClient>["channel"]> | null>(null);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -39,8 +46,55 @@ export default function LiveMatchControl() {
     setIsModalOpen(true);
   };
 
+  const isVisibleRef = useRef(isElementsVisible);
+  useEffect(() => {
+    isVisibleRef.current = isElementsVisible;
+  }, [isElementsVisible]);
+
+  useEffect(() => {
+    if (!obsToken) return;
+    const supabase = createClient();
+    const ch = supabase.channel(`obs-${obsToken}`, {
+      config: { broadcast: { self: false } },
+    });
+    
+    ch.on("broadcast", { event: "request-visibility" }, () => {
+      // Send current visibility state to OBS when it requests it
+      ch.send({
+        type: "broadcast",
+        event: "visibility",
+        payload: { isVisible: isVisibleRef.current },
+      });
+    }).subscribe();
+
+    channelRef.current = ch;
+
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [obsToken]);
+  const handleToggleVisibility = () => {
+    const nextState = !isElementsVisible;
+    toggleElementsVisible();
+
+    if (channelRef.current) {
+      channelRef.current.send({
+        type: "broadcast",
+        event: "visibility",
+        payload: { isVisible: nextState },
+      });
+    }
+  };
+
   const handleConfirmReset = () => {
     resetToDefault();
+    if (channelRef.current) {
+      channelRef.current.send({
+        type: "broadcast",
+        event: "visibility",
+        payload: { isVisible: true },
+      });
+    }
     setModalStep("success");
   };
 
@@ -202,13 +256,37 @@ export default function LiveMatchControl() {
         <LayoutCustomization />
       )}
 
-      {/* Reset ke Default Button (matching reference design) */}
-      <button
-        onClick={handleOpenResetModal}
-        className="w-full py-4 rounded-[10px] bg-[#222222] hover:bg-[#282828] border border-red-600/90 text-red-500 font-poppins font-normal text-sm sm:text-base tracking-wide transition-all duration-150 cursor-pointer text-center shadow-lg active:scale-[0.99]"
-      >
-        Reset ke Default
-      </button>
+      {/* Action Buttons Row: Reset ke Default & Invisible/Visible Button */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+        <button
+          onClick={handleOpenResetModal}
+          className="w-full py-4 rounded-[10px] bg-[#222222] hover:bg-[#282828] border border-red-600/90 text-red-500 font-poppins font-normal text-sm sm:text-base tracking-wide transition-all duration-150 cursor-pointer text-center shadow-lg active:scale-[0.99]"
+        >
+          Reset ke Default
+        </button>
+
+        <button
+          onClick={handleToggleVisibility}
+          title={isElementsVisible ? "Sembunyikan teks skor & tim di scoreboard" : "Tampilkan teks skor & tim di scoreboard"}
+          className={`w-full py-4 rounded-[10px] font-poppins font-normal text-sm sm:text-base tracking-wide transition-all duration-150 cursor-pointer flex items-center justify-center gap-2.5 shadow-lg active:scale-[0.99] group ${
+            isElementsVisible
+              ? "bg-[#222222] hover:bg-[#282828] border border-white/10 hover:border-white/20 text-zinc-300 hover:text-white"
+              : "bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/60 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.15)]"
+          }`}
+        >
+          {isElementsVisible ? (
+            <>
+              <Eye className="w-5 h-5 text-zinc-400 group-hover:text-white transition-colors" />
+              <span>Invisible</span>
+            </>
+          ) : (
+            <>
+              <EyeOff className="w-5 h-5 text-amber-400" />
+              <span>Visible</span>
+            </>
+          )}
+        </button>
+      </div>
 
       {/* Confirmation & Success Pop-up Modal */}
       <ResetConfirmationModal

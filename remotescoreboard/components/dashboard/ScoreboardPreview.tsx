@@ -6,6 +6,7 @@ import { useScoreboardStore } from "@/store/useScoreboardStore";
 import { uploadBackgroundImage, injectFontFace } from "@/lib/supabase/storage";
 import type { ElementKey } from "@/types/database";
 import AnimatedScore from "./AnimatedScore";
+import AnimatedTeamName from "./AnimatedTeamName";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -150,6 +151,7 @@ export default function ScoreboardPreview() {
     team1,
     team2,
     elements,
+    isElementsVisible,
     setBackgroundImageUrl,
     setElementPosition,
   } = useScoreboardStore();
@@ -259,8 +261,8 @@ export default function ScoreboardPreview() {
     key === "team1_score" || key === "team2_score" ? (layout.scoreFontFamily || "Montserrat") : (layout.nameFontFamily || "Montserrat");
 
   const getContent = (key: ElementKey) => {
-    if (key === "team1_name")  return team1.name  || "TEAM 1";
-    if (key === "team2_name")  return team2.name  || "TEAM 2";
+    if (key === "team1_name")  return <AnimatedTeamName value={team1.name || "TEAM 1"} align={elements[key].align as "left" | "center" | "right"} />;
+    if (key === "team2_name")  return <AnimatedTeamName value={team2.name || "TEAM 2"} align={elements[key].align as "left" | "center" | "right"} />;
     if (key === "team1_score") return <AnimatedScore value={team1.score} align={elements[key].align as "left" | "center" | "right"} />;
     return <AnimatedScore value={team2.score} align={elements[key].align as "left" | "center" | "right"} />;
   };
@@ -298,6 +300,12 @@ export default function ScoreboardPreview() {
               <Trash2 className="w-3.5 h-3.5" />
               <span>Remove BG</span>
             </button>
+          )}
+          {!isElementsVisible && (
+            <div className="flex items-center gap-1.5 px-3 py-1 text-[11px] sm:text-[12px] tracking-wider font-mono text-amber-400 border border-amber-500/30 rounded-full bg-amber-500/10 shrink-0 whitespace-nowrap">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              <span>TEXT INVISIBLE</span>
+            </div>
           )}
           <div className="px-3 py-1 text-[11px] sm:text-[12px] tracking-wider sm:tracking-widest font-mono text-zinc-400 border border-white/10 rounded-full bg-white/5 uppercase shrink-0 whitespace-nowrap">
             1920×1080
@@ -349,34 +357,43 @@ export default function ScoreboardPreview() {
           )}
 
           {/* Draggable elements */}
-          {ELEMENTS.map(({ key, accent }) => (
-            <DraggableElement
-              key={key}
-              posKey={key}
-              accent={accent}
-              isDragging={draggingKey === key}
-              onPointerDown={handlePointerDown}
-              fontSize={getFontSize(key)}
-              color={getColor(key)}
-              fontFamily={getFontFamily(key)}
-              elements={elements}
-            >
-              {getContent(key)}
-            </DraggableElement>
-          ))}
+          <div
+            className="transition-opacity duration-300"
+            style={{
+              opacity: isElementsVisible ? 1 : 0,
+              pointerEvents: isElementsVisible ? "auto" : "none",
+            }}
+          >
+            {ELEMENTS.map(({ key, accent }) => (
+              <DraggableElement
+                key={key}
+                posKey={key}
+                accent={accent}
+                isDragging={draggingKey === key}
+                onPointerDown={handlePointerDown}
+                fontSize={getFontSize(key)}
+                color={getColor(key)}
+                fontFamily={getFontFamily(key)}
+                elements={elements}
+              >
+                {getContent(key)}
+              </DraggableElement>
+            ))}
+          </div>
         </div>
 
         {/* Coordinate badges — sit outside scaled layer, in % space */}
-        {ELEMENTS.map(({ key, accent }) => (
-          <CoordBadge
-            key={key}
-            x={elements[key].x}
-            y={elements[key].y}
-            accent={accent}
-            dragging={draggingKey === key}
-            isLocked={elements[key].isLocked}
-          />
-        ))}
+        {isElementsVisible &&
+          ELEMENTS.map(({ key, accent }) => (
+            <CoordBadge
+              key={key}
+              x={elements[key].x}
+              y={elements[key].y}
+              accent={accent}
+              dragging={draggingKey === key}
+              isLocked={elements[key].isLocked}
+            />
+          ))}
       </div>
 
       {/* Drag tip */}

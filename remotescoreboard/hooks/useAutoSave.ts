@@ -2,11 +2,11 @@
 
 import { useEffect } from "react";
 import { useScoreboardStore } from "@/store/useScoreboardStore";
-import { updateTeam, updateLayout, updateElement } from "@/lib/supabase/dbUpdates";
+import { updateTeam, updateLayout, updateElement, updateMatchStatus } from "@/lib/supabase/dbUpdates";
 import { ElementKey } from "@/types/database";
 
 export function useAutoSave() {
-  const { team1, team2, layout, elements, setSavingStatus, matchId } = useScoreboardStore();
+  const { team1, team2, layout, elements, isElementsVisible, setSavingStatus, matchId } = useScoreboardStore();
 
   // ─── 1. Team 1 ────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -106,4 +106,9 @@ export function useAutoSave() {
 
     return () => clearTimeout(timer);
   }, [elements, layout.id, matchId, setSavingStatus]);
+
+  // ─── 5. Match status (Visibility) ─────────────────────────────────────────
+  // Note: We no longer save visibility to match.status because the database
+  // has a check constraint restricting status to ('draft', 'live', 'archived').
+  // Instead, visibility is managed dynamically via Realtime Broadcasts.
 }

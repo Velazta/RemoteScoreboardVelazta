@@ -28,6 +28,7 @@ export function useScoreboardRealtime(obsToken: string) {
   const nameCustomFontUrl  = useScoreboardStore((s) => s.layout.nameCustomFontUrl);
   const scoreFontFamily    = useScoreboardStore((s) => s.layout.scoreFontFamily);
   const scoreCustomFontUrl = useScoreboardStore((s) => s.layout.scoreCustomFontUrl);
+  const setIsElementsVisible = useScoreboardStore((s) => s.setIsElementsVisible);
   const isMountedRef       = useRef(true);
 
   // Inject font whenever the URL changes
@@ -90,9 +91,30 @@ export function useScoreboardRealtime(obsToken: string) {
           fetchAndHydrate();
         }
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "matches" },
+        () => {
+          fetchAndHydrate();
+        }
+      )
+      .on(
+        "broadcast",
+        { event: "visibility" },
+        ({ payload }) => {
+          if (payload && typeof payload.isVisible === "boolean") {
+            setIsElementsVisible(payload.isVisible);
+          }
+        }
+      )
       .subscribe((status, err) => {
         if (status === "SUBSCRIBED") {
           console.log(`[Realtime] ✅ Subscribed to obs-${obsToken}`);
+          // Request current visibility from dashboard
+          channel.send({
+            type: "broadcast",
+            event: "request-visibility",
+          });
         }
         if (status === "CHANNEL_ERROR") {
           const msg = err instanceof Error ? err.message : String(err ?? "unknown");

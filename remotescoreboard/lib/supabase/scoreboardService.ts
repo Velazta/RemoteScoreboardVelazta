@@ -127,6 +127,7 @@ export async function getOrCreateInitialMatch() {
     return {
       matchId: match.id,
       obsToken: match.obs_token,
+      status: match.status,
       team1: {
         id: team1Data.id,
         name: team1Data.name,
@@ -234,6 +235,7 @@ export async function getOrCreateInitialMatch() {
   return {
     matchId: newMatch.id,
     obsToken: newMatch.obs_token,
+    status: newMatch.status,
     team1: {
       id: team1Created?.id,
       name: team1Created?.name ?? "SADNESS",
@@ -336,6 +338,7 @@ export async function getMatchByObsToken(obsToken: string) {
 
   return {
     matchId: matchData.id,
+    status: matchData.status,
     team1: {
       id: team1Data.id,
       name: team1Data.name,

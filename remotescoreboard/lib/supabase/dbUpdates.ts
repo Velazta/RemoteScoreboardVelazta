@@ -62,3 +62,14 @@ export async function updateElement(
     console.error("[dbUpdates] updateElement FAILED:", error.message);
   }
 }
+
+export async function updateMatchStatus(matchId: string, status: string) {
+  const { error } = await supabase
+    .from("matches")
+    .update({ status })
+    .eq("id", matchId);
+
+  if (error) {
+    console.error("[dbUpdates] updateMatchStatus FAILED:", error.message);
+  }
+}

@@ -62,6 +62,9 @@ export interface ScoreboardStore {
   setTeamNameSize: (size: number) => void;
   setScoreSize: (size: number) => void;
   setTeamColor: (teamSlot: "team1" | "team2", type: "name" | "score", color: string) => void;
+  isElementsVisible: boolean;
+  setIsElementsVisible: (visible: boolean) => void;
+  toggleElementsVisible: () => void;
   setElementPosition: (
     key: "team1_name" | "team1_score" | "team2_name" | "team2_score",
     pos: Partial<ElementPositionState>
@@ -69,6 +72,7 @@ export interface ScoreboardStore {
   hydrateFromDatabase: (data: {
     matchId: string;
     obsToken: string;
+    status?: string;
     team1: TeamState;
     team2: TeamState;
     layout: LayoutConfigState;
@@ -88,6 +92,7 @@ export const useScoreboardStore = create<ScoreboardStore>((set) => ({
   matchId: null,
   obsToken: "match-tqq02a",
   status: "live",
+  isElementsVisible: true,
   team1: { name: "SADNESS", score: 0, nameColor: "#ffffff", scoreColor: "#ffffff" },
   team2: { name: "NBA", score: 0, nameColor: "#ffffff", scoreColor: "#ffffff" },
   layout: {
@@ -107,6 +112,8 @@ export const useScoreboardStore = create<ScoreboardStore>((set) => ({
 
   setMatchId: (id, obsToken) => set({ matchId: id, obsToken }),
   setMatchStatus: (status) => set({ status }),
+  setIsElementsVisible: (isElementsVisible) => set({ isElementsVisible }),
+  toggleElementsVisible: () => set((state) => ({ isElementsVisible: !state.isElementsVisible })),
   setTeam1Name: (name) => set((state) => ({ team1: { ...state.team1, name } })),
   setTeam1Score: (score) => set((state) => ({ team1: { ...state.team1, score: Math.max(0, score) } })),
   setTeam2Name: (name) => set((state) => ({ team2: { ...state.team2, name } })),
@@ -119,6 +126,7 @@ export const useScoreboardStore = create<ScoreboardStore>((set) => ({
   resetScores: () => set((state) => ({ team1: { ...state.team1, score: 0 }, team2: { ...state.team2, score: 0 } })),
   resetToDefault: () =>
     set((state) => ({
+      isElementsVisible: true,
       team1: {
         ...state.team1,
         name: "TEAM 1",
@@ -172,6 +180,8 @@ export const useScoreboardStore = create<ScoreboardStore>((set) => ({
     set({
       matchId: data.matchId,
       obsToken: data.obsToken,
+      status: (data.status as ScoreboardStore["status"]) ?? "live",
+      // We don't override isElementsVisible here because it's handled via Realtime Broadcasts
       team1: data.team1,
       team2: data.team2,
       layout: data.layout,
