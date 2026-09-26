@@ -50,7 +50,7 @@ export default function AnimatedTeamName({ value, align = "center", className = 
           .split("")
           .map((char, index) => {
             // Biarkan spasi tetap menjadi spasi (tidak ikut teracak)
-            if (char === " ") return " ";
+            if (char === " " || char === "\n") return char;
 
             // Jika indeks huruf ini sudah lebih kecil dari iterasi saat ini, kunci huruf asli
             if (index < iteration) {
@@ -85,13 +85,15 @@ export default function AnimatedTeamName({ value, align = "center", className = 
     justify: "space-between",
   };
 
+  const isMultiline = value.includes("\n");
+
   return (
     <span
-      className={`relative flex items-center w-full h-full leading-none overflow-hidden ${className}`}
+      className={`relative flex items-center w-full h-full leading-none ${!isMultiline ? "overflow-hidden" : ""} ${className}`}
       style={{ justifyContent: justifyMap[align] }}
     >
       <span
-        className="whitespace-nowrap w-full"
+        className={`${isMultiline ? "whitespace-pre-wrap" : "whitespace-nowrap"} w-full`}
         style={{ textAlign: align as React.CSSProperties["textAlign"] }}
       >
         {displayValue}

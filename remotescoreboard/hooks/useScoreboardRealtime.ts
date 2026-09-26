@@ -31,6 +31,8 @@ export function useScoreboardRealtime(obsToken: string) {
   const setIsElementsVisible = useScoreboardStore((s) => s.setIsElementsVisible);
   const isMountedRef       = useRef(true);
 
+  const customElements = useScoreboardStore((s) => s.customElements);
+
   // Inject font whenever the URL changes
   useEffect(() => {
     if (nameCustomFontUrl && nameFontFamily) {
@@ -39,7 +41,12 @@ export function useScoreboardRealtime(obsToken: string) {
     if (scoreCustomFontUrl && scoreFontFamily) {
       injectFontFace(scoreFontFamily, scoreCustomFontUrl);
     }
-  }, [nameCustomFontUrl, nameFontFamily, scoreCustomFontUrl, scoreFontFamily]);
+    customElements.forEach(el => {
+      if (el.customFontUrl && el.fontFamily) {
+        injectFontFace(el.fontFamily, el.customFontUrl);
+      }
+    });
+  }, [nameCustomFontUrl, nameFontFamily, scoreCustomFontUrl, scoreFontFamily, customElements]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -94,6 +101,13 @@ export function useScoreboardRealtime(obsToken: string) {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "matches" },
+        () => {
+          fetchAndHydrate();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "custom_elements" },
         () => {
           fetchAndHydrate();
         }

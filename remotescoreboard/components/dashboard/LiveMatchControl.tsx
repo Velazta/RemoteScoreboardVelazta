@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import LayoutCustomization from "./LayoutCustomization";
+import AdvancedFeaturePanel from "./AdvancedFeaturePanel";
 import ResetConfirmationModal from "./ResetConfirmationModal";
 import { useScoreboardStore } from "@/store/useScoreboardStore";
 import { createClient } from "@/lib/supabase/client";
@@ -10,7 +11,7 @@ import gsap from "gsap";
 
 export default function LiveMatchControl() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<"live" | "layout">("live");
+  const [activeTab, setActiveTab] = useState<"live" | "layout" | "advanced">("live");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalStep, setModalStep] = useState<"caution" | "success">("caution");
 
@@ -104,18 +105,22 @@ export default function LiveMatchControl() {
 
   return (
     <div ref={containerRef} className="flex flex-col w-full h-full gap-6">
-      {/* Tab Navigation */}
-      <div className="relative flex items-center gap-2 w-full bg-[#1A1A1A]/60 backdrop-blur-xl border border-white/10 rounded-[16px] p-2 shadow-lg">
+      {/* Tab Navigation (3-Tab Menu) */}
+      <div className="relative flex items-center gap-1.5 w-full bg-[#1A1A1A]/60 backdrop-blur-xl border border-white/10 rounded-[16px] p-2 shadow-lg">
         {/* Animated Slider Background */}
         <div
-          className={`absolute top-2 bottom-2 left-2 w-[calc(50%-12px)] rounded-[12px] bg-gradient-to-b from-white/10 to-transparent border border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.1)] transition-transform duration-300 ease-out ${
-            activeTab === "live" ? "translate-x-0" : "translate-x-[calc(100%+8px)]"
+          className={`absolute top-2 bottom-2 left-2 w-[calc(33.333%-10px)] rounded-[12px] bg-gradient-to-b from-white/10 to-transparent border border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.1)] transition-transform duration-300 ease-out ${
+            activeTab === "live"
+              ? "translate-x-0"
+              : activeTab === "layout"
+              ? "translate-x-[calc(100%+8px)]"
+              : "translate-x-[calc(200%+16px)]"
           }`}
         />
 
         <button
           onClick={() => setActiveTab("live")}
-          className={`relative z-10 flex-1 py-3.5 font-montserrat font-medium text-[10px] sm:text-xs tracking-widest uppercase transition-colors rounded-[12px] ${
+          className={`relative z-10 flex-1 py-3.5 font-montserrat font-medium text-[10px] sm:text-xs tracking-widest uppercase transition-colors rounded-[12px] text-center ${
             activeTab === "live"
               ? "text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"
               : "text-white/50 hover:text-white"
@@ -126,13 +131,24 @@ export default function LiveMatchControl() {
 
         <button
           onClick={() => setActiveTab("layout")}
-          className={`relative z-10 flex-1 py-3.5 font-montserrat font-medium text-[10px] sm:text-xs tracking-widest uppercase transition-colors rounded-[12px] ${
+          className={`relative z-10 flex-1 py-3.5 font-montserrat font-medium text-[10px] sm:text-xs tracking-widest uppercase transition-colors rounded-[12px] text-center ${
             activeTab === "layout"
               ? "text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"
               : "text-white/50 hover:text-white"
           }`}
         >
           Layout Customization
+        </button>
+
+        <button
+          onClick={() => setActiveTab("advanced")}
+          className={`relative z-10 flex-1 py-3.5 font-montserrat font-medium text-[10px] sm:text-xs tracking-widest uppercase transition-colors rounded-[12px] text-center ${
+            activeTab === "advanced"
+              ? "text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+              : "text-white/50 hover:text-white"
+          }`}
+        >
+          Advanced Feature
         </button>
       </div>
 
@@ -252,8 +268,10 @@ export default function LiveMatchControl() {
             </div>
           </div>
         </>
-      ) : (
+      ) : activeTab === "layout" ? (
         <LayoutCustomization />
+      ) : (
+        <AdvancedFeaturePanel />
       )}
 
       {/* Action Buttons Row: Reset ke Default & Invisible/Visible Button */}

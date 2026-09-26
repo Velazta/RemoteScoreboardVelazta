@@ -56,6 +56,43 @@ export async function uploadBackgroundImage(file: File, layoutId: string): Promi
 }
 
 /**
+ * Upload custom image (logo, sponsor, dll) ke Supabase Storage (bucket: backgrounds)
+ * dan HANYA mengembalikan public URL tanpa mengubah tabel layouts.
+ */
+export async function uploadCustomImage(file: File, elementId: string): Promise<string | null> {
+  try {
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData.user) {
+      throw new Error("User belum terotentikasi");
+    }
+
+    const fileExt = file.name.split(".").pop();
+    const filePath = `${authData.user.id}/${elementId}_${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("backgrounds")
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: true,
+      });
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("backgrounds")
+      .getPublicUrl(filePath);
+
+    return publicUrlData.publicUrl;
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Upload custom image error:", message);
+    return null;
+  }
+}
+
+/**
  * Inject dynamic @font-face ke document.head browser
  */
 export function injectFontFace(fontFamily: string, fontUrl: string | null) {

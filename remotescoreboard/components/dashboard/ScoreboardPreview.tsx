@@ -145,15 +145,18 @@ export default function ScoreboardPreview() {
   const [isUploading, setIsUploading] = useState(false);
   const [scale, setScale]             = useState(1);
   const [draggingKey, setDraggingKey] = useState<ElementKey | null>(null);
+  const [draggingCustomId, setDraggingCustomId] = useState<string | null>(null);
 
   const {
     layout,
     team1,
     team2,
     elements,
+    customElements,
     isElementsVisible,
     setBackgroundImageUrl,
     setElementPosition,
+    updateCustomElement,
   } = useScoreboardStore();
 
   // Inject font whenever it changes
@@ -164,7 +167,12 @@ export default function ScoreboardPreview() {
     if (layout.scoreCustomFontUrl && layout.scoreFontFamily) {
       injectFontFace(layout.scoreFontFamily, layout.scoreCustomFontUrl);
     }
-  }, [layout.nameCustomFontUrl, layout.nameFontFamily, layout.scoreCustomFontUrl, layout.scoreFontFamily]);
+    customElements.forEach(el => {
+      if (el.customFontUrl && el.fontFamily) {
+        injectFontFace(el.fontFamily, el.customFontUrl);
+      }
+    });
+  }, [layout.nameCustomFontUrl, layout.nameFontFamily, layout.scoreCustomFontUrl, layout.scoreFontFamily, customElements]);
 
   // Keep scale in sync with container width via ResizeObserver
   useEffect(() => {
@@ -209,6 +217,38 @@ export default function ScoreboardPreview() {
     };
   }, [draggingKey, scale, setElementPosition]);
 
+  // Drag handling for Custom Elements (Text+ & Image)
+  useEffect(() => {
+    if (!draggingCustomId) return;
+
+    const clamp = (v: number, max: number) => Math.min(Math.max(v, 0), max);
+
+    const handleMove = (e: PointerEvent) => {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const rawX = (e.clientX - rect.left) / scale;
+      const rawY = (e.clientY - rect.top)  / scale;
+      const x = clamp(Math.round(rawX - dragOffsetRef.current.x), CANVAS_W);
+      const y = clamp(Math.round(rawY - dragOffsetRef.current.y), CANVAS_H);
+      updateCustomElement(draggingCustomId, { x, y });
+    };
+
+    const handleUp = () => {
+      setDraggingCustomId(null);
+      document.body.style.userSelect  = "";
+      document.body.style.cursor      = "";
+    };
+
+    document.body.style.userSelect = "none";
+    document.body.style.cursor     = "grabbing";
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup",   handleUp);
+    return () => {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup",   handleUp);
+    };
+  }, [draggingCustomId, scale, updateCustomElement]);
+
   const handlePointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>, key: ElementKey) => {
       if (elements[key]?.isLocked) return;
@@ -222,6 +262,22 @@ export default function ScoreboardPreview() {
       setDraggingKey(key);
     },
     [scale, elements]
+  );
+
+  const handleCustomPointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>, id: string) => {
+      const el = customElements.find((c) => c.id === id);
+      if (el?.isLocked) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const rect = e.currentTarget.getBoundingClientRect();
+      dragOffsetRef.current = {
+        x: (e.clientX - rect.left) / scale,
+        y: (e.clientY - rect.top) / scale,
+      };
+      setDraggingCustomId(id);
+    },
+    [scale, customElements]
   );
 
   // ---- file upload helpers ----
@@ -379,21 +435,91 @@ export default function ScoreboardPreview() {
                 {getContent(key)}
               </DraggableElement>
             ))}
+
+            {/* Custom Elements (Text+ & Image) */}
+            {customElements.map((el) => {
+              const isLocked = !!el.isLocked;
+              const isDragging = draggingCustomId === el.id;
+              const accent = el.type === "text" ? "#06b6d4" : "#eab308";
+
+              return (
+                <div
+                  key={el.id}
+                  onPointerDown={(e) => handleCustomPointerDown(e, el.id)}
+                  className={`absolute select-none flex items-center ${el.type === 'text' ? 'whitespace-pre-wrap' : 'whitespace-nowrap'}`}
+                  style={{
+                    left: el.x,
+                    top: el.y,
+                    width: el.width,
+                    textAlign: el.align as React.CSSProperties["textAlign"],
+                    fontFamily: el.fontFamily || "Montserrat",
+                    fontSize: `${el.fontSize || 40}px`,
+                    color: el.color || "#ffffff",
+                    fontWeight: 700,
+                    textShadow: "0 2px 12px rgba(0,0,0,0.65)",
+                    cursor: isLocked ? "not-allowed" : isDragging ? "grabbing" : "grab",
+                    outline: isLocked
+                      ? "1px dashed rgba(245,158,11,0.35)"
+                      : isDragging
+                      ? `2px dashed ${accent}`
+                      : `1px dashed ${accent}55`,
+                    outlineOffset: 5,
+                    transition: isDragging ? "none" : "outline 0.15s ease",
+                    zIndex: isDragging ? 20 : 10,
+                    transform: `rotate(${el.rotation || 0}deg)`,
+                  }}
+                >
+                  {el.type === "text" ? (
+                    <span className="w-full block" style={{ textAlign: el.align as React.CSSProperties["textAlign"] }}>
+                      {el.content || "TEXT DEFAULT"}
+                    </span>
+                  ) : el.content ? (
+                    <img src={el.content} alt="Custom Element" className="w-full object-contain pointer-events-none" />
+                  ) : (
+                    <div className="w-full h-16 bg-cyan-950/40 border border-dashed border-cyan-500/40 flex items-center justify-center text-xs text-cyan-300">
+                      NO IMAGE UPLOADED
+                    </div>
+                  )}
+
+                  {isLocked && (
+                    <span
+                      className="absolute -top-3 -right-3 p-0.5 rounded bg-black/80 border border-amber-500/40 text-amber-400 pointer-events-none shadow-sm flex items-center justify-center"
+                      title="Element is locked"
+                    >
+                      <Lock className="w-2.5 h-2.5" />
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
         {/* Coordinate badges — sit outside scaled layer, in % space */}
-        {isElementsVisible &&
-          ELEMENTS.map(({ key, accent }) => (
-            <CoordBadge
-              key={key}
-              x={elements[key].x}
-              y={elements[key].y}
-              accent={accent}
-              dragging={draggingKey === key}
-              isLocked={elements[key].isLocked}
-            />
-          ))}
+        {isElementsVisible && (
+          <>
+            {ELEMENTS.map(({ key, accent }) => (
+              <CoordBadge
+                key={key}
+                x={elements[key].x}
+                y={elements[key].y}
+                accent={accent}
+                dragging={draggingKey === key}
+                isLocked={elements[key].isLocked}
+              />
+            ))}
+            {customElements.map((el) => (
+              <CoordBadge
+                key={el.id}
+                x={el.x}
+                y={el.y}
+                accent={el.type === "text" ? "#06b6d4" : "#eab308"}
+                dragging={draggingCustomId === el.id}
+                isLocked={el.isLocked}
+              />
+            ))}
+          </>
+        )}
       </div>
 
       {/* Drag tip */}

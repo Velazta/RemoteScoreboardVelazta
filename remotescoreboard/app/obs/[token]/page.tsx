@@ -29,7 +29,7 @@ export default function ObsOverlayPage({ params }: ObsOverlayPageProps) {
 
   useScoreboardRealtime(obsToken);
 
-  const { layout, team1, team2, elements, isElementsVisible } = useScoreboardStore();
+  const { layout, team1, team2, elements, customElements, isElementsVisible } = useScoreboardStore();
 
   // Convert absolute 1920×1080 coordinates to viewport-percentage.
   // NO vertical centering transform — anchor is the TOP-LEFT of the text box,
@@ -137,6 +137,47 @@ export default function ObsOverlayPage({ params }: ObsOverlayPageProps) {
         >
           <AnimatedScore value={team2.score} align={elements.team2_score.align as "left" | "center" | "right"} />
         </div>
+
+        {/* Custom Elements (Text+ & Image) */}
+        {customElements.map((el) => {
+          const style: React.CSSProperties = {
+            position: "absolute",
+            left: `${(el.x / CANVAS_W) * 100}%`,
+            top: `${(el.y / CANVAS_H) * 100}%`,
+            width: `${(el.width / CANVAS_W) * 100}%`,
+            textAlign: el.align as React.CSSProperties["textAlign"],
+          };
+
+          if (el.type === "text") {
+            return (
+              <div
+                key={el.id}
+                className="flex items-center"
+                style={{
+                  ...style,
+                  fontFamily: el.fontFamily || "Montserrat",
+                  fontSize: `${((el.fontSize || 40) / CANVAS_H) * 100}vh`,
+                  color: el.color || "#ffffff",
+                  fontWeight: 700,
+                  transform: `rotate(${el.rotation || 0}deg)`,
+                  whiteSpace: "pre-wrap",
+                }}
+              >
+                <span className="w-full block" style={{ textAlign: el.align as React.CSSProperties["textAlign"] }}>
+                  {el.content || "TEXT DEFAULT"}
+                </span>
+              </div>
+            );
+          }
+
+          return (
+            <div key={el.id} style={{ ...style, transform: `rotate(${el.rotation || 0}deg)` }}>
+              {el.content && (
+                <img src={el.content} alt="Custom Element" className="w-full object-contain" />
+              )}
+            </div>
+          );
+        })}
       </div>
     </main>
     </>

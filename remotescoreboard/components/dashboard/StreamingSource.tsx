@@ -11,7 +11,7 @@ export default function StreamingSource() {
 
   useEffect(() => {
     if (typeof window !== "undefined" && obsToken) {
-      setObsUrl(`${window.location.origin}/obs/${obsToken}`);
+      setObsUrl(() => `${window.location.origin}/obs/${obsToken}`);
     }
   }, [obsToken]);
 
@@ -26,7 +26,7 @@ export default function StreamingSource() {
   };
 
   return (
-    <div className="flex flex-col w-full rounded-[12px] border border-white/10 bg-[#1A1A1A]/80 backdrop-blur-xl p-6 gap-3 shadow-lg">
+    <div className="flex flex-col w-full rounded-xl border border-white/10 bg-[#1A1A1A]/80 backdrop-blur-xl p-6 gap-3 shadow-lg">
       {/* Header */}
       <div className="flex items-center gap-3 text-white">
         <Radio className="w-6 h-6 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />

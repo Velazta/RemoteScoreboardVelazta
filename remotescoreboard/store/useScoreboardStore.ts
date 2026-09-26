@@ -30,6 +30,24 @@ export interface LayoutConfigState {
   scoreSize: number;
 }
 
+export interface CustomElementState {
+  id: string;
+  matchId?: string;
+  type: "text" | "image";
+  content: string;
+  fontFamily?: string;
+  customFontUrl?: string | null;
+  fontSize?: number;
+  color?: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  align: "left" | "center" | "right" | "justify";
+  rotation?: number;
+  isLocked?: boolean;
+}
+
 export interface ScoreboardStore {
   matchId: string | null;
   obsToken: string | null;
@@ -43,6 +61,7 @@ export interface ScoreboardStore {
     team2_name: ElementPositionState;
     team2_score: ElementPositionState;
   };
+  customElements: CustomElementState[];
   isLoading: boolean;
   isSaving: boolean;
   lastSavedAt: Date | null;
@@ -69,6 +88,13 @@ export interface ScoreboardStore {
     key: "team1_name" | "team1_score" | "team2_name" | "team2_score",
     pos: Partial<ElementPositionState>
   ) => void;
+  
+  // Custom Elements actions
+  addCustomElement: (type: "text" | "image") => void;
+  updateCustomElement: (id: string, pos: Partial<CustomElementState>) => void;
+  deleteCustomElement: (id: string) => void;
+  setCustomElements: (elements: CustomElementState[]) => void;
+
   hydrateFromDatabase: (data: {
     matchId: string;
     obsToken: string;
@@ -77,6 +103,7 @@ export interface ScoreboardStore {
     team2: TeamState;
     layout: LayoutConfigState;
     elements: ScoreboardStore["elements"];
+    customElements?: CustomElementState[];
   }) => void;
   setSavingStatus: (isSaving: boolean) => void;
 }
@@ -106,6 +133,7 @@ export const useScoreboardStore = create<ScoreboardStore>((set) => ({
     scoreSize: 90,
   },
   elements: initialElements,
+  customElements: [],
   isLoading: false,
   isSaving: false,
   lastSavedAt: null,
@@ -158,6 +186,7 @@ export const useScoreboardStore = create<ScoreboardStore>((set) => ({
         team2_name: { ...initialElements.team2_name, id: state.elements.team2_name.id },
         team2_score: { ...initialElements.team2_score, id: state.elements.team2_score.id },
       },
+      // Note: customElements & timer remain untouched by resetToDefault as per user requirements
     })),
   setBackgroundImageUrl: (backgroundImageUrl) => set((state) => ({ layout: { ...state.layout, backgroundImageUrl } })),
   setNameFont: (fontFamily, customFontUrl) => set((state) => ({ layout: { ...state.layout, nameFontFamily: fontFamily, nameCustomFontUrl: customFontUrl } })),
@@ -176,17 +205,61 @@ export const useScoreboardStore = create<ScoreboardStore>((set) => ({
         [key]: { ...state.elements[key], ...pos },
       },
     })),
+
+  // Custom elements actions
+  addCustomElement: (type) =>
+    set((state) => {
+      const newEl = {
+        id: typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID()
+          : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+              const r = (Math.random() * 16) | 0;
+              const v = c === "x" ? r : (r & 0x3) | 0x8;
+              return v.toString(16);
+            }),
+        type,
+        content: type === "text" ? "TEXT DEFAULT" : "",
+        fontFamily: "Montserrat",
+        fontSize: 40,
+        color: "#ffffff",
+        x: 300,
+        y: 300,
+        width: 300,
+        height: 60,
+        align: "center" as const,
+        isLocked: false,
+      };
+      return { customElements: [...state.customElements, newEl] };
+    }),
+
+  updateCustomElement: (id, pos) =>
+    set((state) => ({
+      customElements: state.customElements.map((el) => (el.id === id ? { ...el, ...pos } : el)),
+    })),
+
+  deleteCustomElement: (id) =>
+    set((state) => {
+      if (state.matchId) {
+        import("@/lib/supabase/dbUpdates").then(m => m.deleteCustomElementDb(id));
+      }
+      return {
+        customElements: state.customElements.filter((el) => el.id !== id),
+      };
+    }),
+
+  setCustomElements: (customElements) => set({ customElements }),
+
   hydrateFromDatabase: (data) =>
     set({
       matchId: data.matchId,
       obsToken: data.obsToken,
       status: (data.status as ScoreboardStore["status"]) ?? "live",
-      // We don't override isElementsVisible here because it's handled via Realtime Broadcasts
       team1: data.team1,
       team2: data.team2,
       layout: data.layout,
       elements: data.elements,
+      customElements: data.customElements ?? [],
       isLoading: false,
     }),
   setSavingStatus: (isSaving) => set({ isSaving, lastSavedAt: isSaving ? null : new Date() }),
-}));
+}));

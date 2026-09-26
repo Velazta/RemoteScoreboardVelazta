@@ -44,4 +44,39 @@ export interface DbMatch {
   status: "live" | "finished" | "paused";
   layouts?: DbLayout | DbLayout[];
   teams?: DbTeam[];
+  custom_elements?: DbCustomElement[];
+  match_timers?: DbMatchTimer[];
 }
+
+export interface DbCustomElement {
+  id: string;
+  match_id: string;
+  type: "text" | "image";
+  content: string;
+  font_family?: string;
+  custom_font_url?: string | null;
+  font_size?: number;
+  color?: string;
+  pos_x: number;
+  pos_y: number;
+  width: number;
+  height: number;
+  align: TextAlignment;
+  rotation?: number;
+  is_locked?: boolean;
+}
+
+export interface DbMatchTimer {
+  id: string;
+  match_id: string;
+  timer_token: string;
+  duration_seconds: number;
+  remaining_seconds: number;
+  is_running: boolean;
+  font_size: number;
+  audio_volume: number;
+  font_family?: string;
+  custom_font_url?: string | null;
+  color?: string;
+  updated_at?: string;
+}

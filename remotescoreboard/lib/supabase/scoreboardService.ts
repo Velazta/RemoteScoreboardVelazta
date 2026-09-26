@@ -1,6 +1,6 @@
 import { createClient } from "./client";
 import { TeamState, LayoutConfigState, ElementPositionState } from "@/store/useScoreboardStore";
-import { DbMatch, DbLayout, DbTeam, DbLayoutElement, ElementKey } from "@/types/database";
+import { DbMatch, DbLayout, DbTeam, DbLayoutElement, ElementKey, DbMatchTimer } from "@/types/database";
 
 const supabase = createClient();
 
@@ -8,6 +8,11 @@ const supabase = createClient();
 function generateObsToken(): string {
   const randomStr = Math.random().toString(36).substring(2, 8);
   return `match-${randomStr}`;
+}
+
+function generateTimerToken(): string {
+  const randomStr = Math.random().toString(36).substring(2, 8);
+  return `timer-${randomStr}`;
 }
 
 // Fallback data default dengan tipe pasti
@@ -81,7 +86,9 @@ export async function getOrCreateInitialMatch() {
         score,
         name_color,
         score_color
-      )
+      ),
+      custom_elements (*),
+      match_timers (*)
     `)
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
@@ -124,38 +131,97 @@ export async function getOrCreateInitialMatch() {
       });
     }
 
-    return {
-      matchId: match.id,
-      obsToken: match.obs_token,
-      status: match.status,
-      team1: {
-        id: team1Data.id,
-        name: team1Data.name,
-        score: team1Data.score,
-        nameColor: team1Data.name_color ?? "#ffffff",
-        scoreColor: team1Data.score_color ?? "#ffffff",
-      },
-      team2: {
-        id: team2Data.id,
-        name: team2Data.name,
-        score: team2Data.score,
-        nameColor: team2Data.name_color ?? "#ffffff",
-        scoreColor: team2Data.score_color ?? "#ffffff",
-      },
-      layout: {
-        id: layoutData?.id,
-        name: layoutData?.name ?? "Default Esports Layout",
-        backgroundImageUrl: layoutData?.background_image_url ?? null,
-        nameFontFamily: layoutData?.name_font_family ?? "Montserrat",
-        nameCustomFontUrl: layoutData?.name_custom_font_url ?? null,
-        scoreFontFamily: layoutData?.score_font_family ?? "Bebas Neue",
-        scoreCustomFontUrl: layoutData?.score_custom_font_url ?? null,
-        teamNameSize: layoutData?.name_font_size ?? 90,
-        scoreSize: layoutData?.score_font_size ?? 90,
-      },
-      elements: elementsMap,
-    };
-  }
+      let existingTimer = match.match_timers?.[0];
+      let timerToken = existingTimer?.timer_token;
+
+      if (!existingTimer) {
+        timerToken = generateTimerToken();
+        const { data: newTimer } = await supabase
+          .from("match_timers")
+          .insert({
+            match_id: match.id,
+            timer_token: timerToken,
+            duration_seconds: 300,
+            remaining_seconds: 300,
+            is_running: false,
+            font_size: 90,
+            audio_volume: 100,
+            font_family: "Montserrat",
+            custom_font_url: null,
+            color: "#06b6d4",
+          })
+          .select()
+          .maybeSingle();
+        if (newTimer) existingTimer = newTimer;
+      } else if (!timerToken) {
+        timerToken = generateTimerToken();
+        await supabase
+          .from("match_timers")
+          .update({ timer_token: timerToken })
+          .eq("id", existingTimer.id);
+      }
+
+      return {
+        matchId: match.id,
+        obsToken: match.obs_token,
+        status: match.status,
+        team1: {
+          id: team1Data.id,
+          name: team1Data.name,
+          score: team1Data.score,
+          nameColor: team1Data.name_color ?? "#ffffff",
+          scoreColor: team1Data.score_color ?? "#ffffff",
+        },
+        team2: {
+          id: team2Data.id,
+          name: team2Data.name,
+          score: team2Data.score,
+          nameColor: team2Data.name_color ?? "#ffffff",
+          scoreColor: team2Data.score_color ?? "#ffffff",
+        },
+        layout: {
+          id: layoutData?.id,
+          name: layoutData?.name ?? "Default Esports Layout",
+          backgroundImageUrl: layoutData?.background_image_url ?? null,
+          nameFontFamily: layoutData?.name_font_family ?? "Montserrat",
+          nameCustomFontUrl: layoutData?.name_custom_font_url ?? null,
+          scoreFontFamily: layoutData?.score_font_family ?? "Bebas Neue",
+          scoreCustomFontUrl: layoutData?.score_custom_font_url ?? null,
+          teamNameSize: layoutData?.name_font_size ?? 90,
+          scoreSize: layoutData?.score_font_size ?? 90,
+        },
+        elements: elementsMap,
+        customElements: (match.custom_elements ?? []).map((el: any) => ({
+          id: el.id,
+          matchId: el.match_id,
+          type: el.type,
+          content: el.content,
+          fontFamily: el.font_family,
+          customFontUrl: el.custom_font_url,
+          fontSize: el.font_size,
+          color: el.color,
+          x: Number(el.pos_x),
+          y: Number(el.pos_y),
+          width: Number(el.width),
+          height: Number(el.height),
+          align: el.align,
+          rotation: el.rotation,
+          isLocked: el.is_locked,
+        })),
+        timer: {
+          timerToken: timerToken || match.obs_token,
+          durationSeconds: existingTimer?.duration_seconds ?? 300,
+          remainingSeconds: existingTimer?.remaining_seconds ?? 300,
+          isRunning: existingTimer?.is_running ?? false,
+          fontSize: existingTimer?.font_size ?? 90,
+          audioVolume: existingTimer?.audio_volume ?? 100,
+          fontFamily: existingTimer?.font_family ?? "Montserrat",
+          customFontUrl: existingTimer?.custom_font_url ?? null,
+          color: existingTimer?.color ?? "#06b6d4",
+          updatedAt: existingTimer?.updated_at,
+        },
+      };
+    }
 
   // 4. JIKA BELUM ADA: Auto-seed baru
   console.log("Melakukan auto-seed data awal untuk operator...");
@@ -229,6 +295,26 @@ export async function getOrCreateInitialMatch() {
     .insert(defaultTeamsToInsert)
     .select();
 
+  const newTimerToken = generateTimerToken();
+  const { error: timerInsertError } = await supabase
+    .from("match_timers")
+    .insert({
+      match_id: newMatch.id,
+      timer_token: newTimerToken,
+      duration_seconds: 300,
+      remaining_seconds: 300,
+      is_running: false,
+      font_size: 90,
+      audio_volume: 100,
+      font_family: "Montserrat",
+      custom_font_url: null,
+      color: "#06b6d4"
+    });
+  
+  if (timerInsertError) {
+    console.error("Gagal membuat default match_timers:", timerInsertError.message);
+  }
+
   const team1Created = createdTeams?.find((t: DbTeam) => t.slot === "team1");
   const team2Created = createdTeams?.find((t: DbTeam) => t.slot === "team2");
 
@@ -262,6 +348,18 @@ export async function getOrCreateInitialMatch() {
       scoreSize: newLayout.score_font_size,
     },
     elements: elementsMapWithId,
+    customElements: [],
+    timer: {
+      timerToken: newTimerToken,
+      durationSeconds: 300,
+      remainingSeconds: 300,
+      isRunning: false,
+      fontSize: 90,
+      audioVolume: 100,
+      fontFamily: "Montserrat",
+      customFontUrl: null,
+      color: "#06b6d4",
+    },
   };
 }
 
@@ -299,7 +397,9 @@ export async function getMatchByObsToken(obsToken: string) {
         score,
         name_color,
         score_color
-      )
+      ),
+      custom_elements (*),
+      match_timers (*)
     `)
     .eq("obs_token", obsToken)
     .single();
@@ -365,5 +465,81 @@ export async function getMatchByObsToken(obsToken: string) {
       scoreSize: layoutData?.score_font_size ?? 90,
     },
     elements: elementsMap,
+    customElements: (matchData.custom_elements ?? []).map((el: any) => ({
+      id: el.id,
+      matchId: el.match_id,
+      type: el.type,
+      content: el.content,
+      fontFamily: el.font_family,
+      customFontUrl: el.custom_font_url,
+      fontSize: el.font_size,
+      color: el.color,
+      x: Number(el.pos_x),
+      y: Number(el.pos_y),
+      width: Number(el.width),
+      height: Number(el.height),
+      align: el.align,
+      rotation: el.rotation,
+      isLocked: el.is_locked,
+    })),
   };
+}
+
+export async function getTimerByToken(token: string) {
+  if (!token) return null;
+
+  // 1. Try finding by timer_token
+  const { data: timerData, error } = await supabase
+    .from("match_timers")
+    .select("*")
+    .eq("timer_token", token)
+    .maybeSingle();
+
+  if (timerData) {
+    return {
+      matchId: timerData.match_id,
+      timerToken: timerData.timer_token,
+      durationSeconds: timerData.duration_seconds,
+      remainingSeconds: timerData.remaining_seconds,
+      isRunning: timerData.is_running,
+      fontSize: timerData.font_size,
+      audioVolume: timerData.audio_volume,
+      fontFamily: timerData.font_family ?? "Montserrat",
+      customFontUrl: timerData.custom_font_url ?? null,
+      color: timerData.color ?? "#06b6d4",
+      updatedAt: timerData.updated_at,
+    };
+  }
+
+  // 2. Fallback: Check if token is actually a match obs_token
+  const { data: matchData } = await supabase
+    .from("matches")
+    .select(`
+      id,
+      match_timers (*)
+    `)
+    .eq("obs_token", token)
+    .maybeSingle();
+
+  const fallbackTimer = (matchData?.match_timers as unknown as DbMatchTimer[])?.[0];
+  if (fallbackTimer) {
+    return {
+      matchId: fallbackTimer.match_id,
+      timerToken: fallbackTimer.timer_token,
+      durationSeconds: fallbackTimer.duration_seconds,
+      remainingSeconds: fallbackTimer.remaining_seconds,
+      isRunning: fallbackTimer.is_running,
+      fontSize: fallbackTimer.font_size,
+      audioVolume: fallbackTimer.audio_volume,
+      fontFamily: fallbackTimer.font_family ?? "Montserrat",
+      customFontUrl: fallbackTimer.custom_font_url ?? null,
+      color: fallbackTimer.color ?? "#06b6d4",
+      updatedAt: fallbackTimer.updated_at,
+    };
+  }
+
+  if (error) {
+    console.error("Gagal getTimerByToken:", error.message);
+  }
+  return null;
 }
