@@ -26,9 +26,10 @@ export function useTimerAutoSave() {
         config: { broadcast: { self: false } },
       });
 
+    channelRef.current = channel;
+
     channel.subscribe((status) => {
       if (status === "SUBSCRIBED") {
-        channelRef.current = channel;
         console.log(`[TimerAutoSave] ✅ Broadcast channel ready: obs-${obsToken}`);
       }
     });
@@ -67,6 +68,13 @@ export function useTimerAutoSave() {
       timer.isRunning === true;
     if (isOnlyTick) {
       prevTimerRef.current = timer;
+      if (channelRef.current) {
+        channelRef.current.send({
+          type: "broadcast",
+          event: "timer-tick",
+          payload: { remainingSeconds: timer.remainingSeconds },
+        });
+      }
       return;
     }
     // Significant change (play/pause/reset/font/color/add time)
